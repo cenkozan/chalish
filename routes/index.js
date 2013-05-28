@@ -6,26 +6,77 @@ var callbackUrl = "http://localhost:3000/oauth_callback";
 var fs = require('fs');
 var sys = require('sys');
 var xml2js = require('xml2js');
+var xmlsimple = require('xml-simple');
 
 // checking the notes for tables, dates
 exports.check = function(req,res) {
-	fs.readFile('a.txt', function(err, data) {
-		console.log(data);
+	fs.readFile('a.txt', function(err, xml) {
+		//console.log(data);
 		parser = new xml2js.Parser();
-		parser.addListener('close', function(result) {
-			console.dir(result);
-			console.log('Done.');
-		});
-		parser.parseString(data);
-		/*parser.parse(data, function(err, parsed) {
-			console.log(parsed);
-			console.log(parsed.length);
-			var parse=0, i;
-			for(i=0; i < parsed.length; i++){
-			console.log(parsed[i]);
+		var tables = [], table = null, currentTag = null;
+		parser.addListener('onclosetag', function(tagName) { 
+			if(tagName === "table") {
+				console.log('entered');
+				tables.push(table);
+				currentTag = table = null;
+				return;
 			}
-			})*/
-	});
+			if (currentTag && currentTag.parent) {
+				console.log('entered');
+				var p = currentTag.parent;
+				delete currentTag.parent;
+				currentTag = p;
+			}
+		});
+		//parser.onclosetag = function (tagName) { }
+		parser.onopentag = function (tag) {
+			if (tag.name !== "table" && !table) {
+				console.log('entered');
+				return;
+			}
+			if (tag.name === "table") {
+				console.log('entered');
+				table = tag;
+			}
+			tag.parent = currentTag;
+			tag.children = [];
+			tag.parent && tag.parent.children.push(tag);
+			currentTag = tag;
+		}
+
+		parser.ontext = function (text) {
+			if (currentTag) {
+				console.log('entered');
+				currentTag.children.push(text);
+			}
+		}
+
+		//console.dir(result);
+		//console.log('Done.');
+		/*parser.parseString(xml, function(err, data){
+			console.log(tables.length);
+			var i;
+			for(i=0; i < tables.length; i++){
+			console.log(tables[i]);
+			}
+			console.dir(tables);
+			});*/
+		xmlsimple.parse(xml, function(err, parsed) {
+//			console.log(parsed);
+	//		console.log(parsed.length);
+		//	var parse=0, i;
+			//for(i=0; i < parsed.length; i++){
+			//console.log(parsed);
+			var stringed = Object.keys(parsed);
+			console.log('stringed ' + stringed);
+			console.log(parsed.div.length);
+			var i;
+			for(i=0; i < parsed.div.length; i++){
+				console.log(parsed.div[i]);
+			}
+			//}
+		})
+	});// end of fs.readFile()
 	res.redirect('/');
 }
 
