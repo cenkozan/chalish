@@ -17,6 +17,7 @@ exports.check = function(req,res) {
 		parser = new xml2js.Parser();
 		xmlsimple.parse(xml, function(err, parsed) {
 			var topKeys = Object.keys(parsed);
+			console.log(parsed);
 
 			//Variables to be used in algorithm.
 			var i,j,k,l, middleKeys;
@@ -38,8 +39,10 @@ exports.check = function(req,res) {
 					//Checking for a table.
 					if(Object.keys(middleKeys[j]) == 'table') {
 
+						console.log('printing out' + middleKeys[j]);
 						table = middleKeys[j].table;
 
+						console.log('printing out table' + table);
 						var dateFound;
 
 						//For all the rows
