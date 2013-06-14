@@ -7,78 +7,153 @@ var fs = require('fs');
 var sys = require('sys');
 var xml2js = require('xml2js');
 var xmlsimple = require('xml-simple');
+var moment = require('moment');
 
 // checking the notes for tables, dates
 exports.check = function(req,res) {
+	var table = false;
 	fs.readFile('a.txt', function(err, xml) {
 		//console.log(data);
 		parser = new xml2js.Parser();
-		var tables = [], table = null, currentTag = null;
-		parser.addListener('onclosetag', function(tagName) { 
-			if(tagName === "table") {
-				console.log('entered');
-				tables.push(table);
-				currentTag = table = null;
-				return;
-			}
-			if (currentTag && currentTag.parent) {
-				console.log('entered');
-				var p = currentTag.parent;
-				delete currentTag.parent;
-				currentTag = p;
-			}
-		});
-		//parser.onclosetag = function (tagName) { }
-		parser.onopentag = function (tag) {
-			if (tag.name !== "table" && !table) {
-				console.log('entered');
-				return;
-			}
-			if (tag.name === "table") {
-				console.log('entered');
-				table = tag;
-			}
-			tag.parent = currentTag;
-			tag.children = [];
-			tag.parent && tag.parent.children.push(tag);
-			currentTag = tag;
-		}
-
-		parser.ontext = function (text) {
-			if (currentTag) {
-				console.log('entered');
-				currentTag.children.push(text);
-			}
-		}
-
-		//console.dir(result);
-		//console.log('Done.');
-		/*parser.parseString(xml, function(err, data){
-			console.log(tables.length);
-			var i;
-			for(i=0; i < tables.length; i++){
-			console.log(tables[i]);
-			}
-			console.dir(tables);
-			});*/
 		xmlsimple.parse(xml, function(err, parsed) {
-//			console.log(parsed);
-	//		console.log(parsed.length);
-		//	var parse=0, i;
-			//for(i=0; i < parsed.length; i++){
-			//console.log(parsed);
-			var stringed = Object.keys(parsed);
-			console.log('stringed ' + stringed);
-			console.log(parsed.div.length);
-			var i;
-			for(i=0; i < parsed.div.length; i++){
-				console.log(parsed.div[i]);
-			}
-			//}
-		})
+			var topKeys = Object.keys(parsed);
+
+			//Variables to be used in algorithm.
+			var i,j,k,l, middleKeys;
+			var dates = [];
+			var dateLength = 0;
+			var firstDateRow, firstDateColumn, secondDateColumn;
+			var firstDateColumnFound = false, secondDateColumnFound = false;
+			//start date and end date have to be adjacent for my algorithm to work
+			var algorithmStart;
+			//end variables to be used in algorithm.
+
+
+			//xml returned
+			//checking for a table.
+			for (i = 0; i < topKeys.length; i++) {
+				middleKeys = parsed[topKeys[i]];
+				console.log(middleKeys);
+				for(j=0; j < middleKeys.length; j++){
+					//Checking for a table.
+					if(Object.keys(middleKeys[j]) == 'table') {
+
+						table = middleKeys[j].table;
+
+						var dateFound;
+
+						//For all the rows
+						for(k = 0; k < table.tr.length; k++){
+							//Reset firstDateColumnFound if algorithmStart 
+							//is not set.  Two columns have to be adjacent for the algorithmStart
+							console.log('giriyor');
+							if(!algorithmStart) {
+								firstDateColumnFound = false;
+							}
+							//if the table contains only 1 column, return false
+							if(table.tr[k].td.length < 2) {
+								return "There are not enough number of columns.  Chalish requires at least 2 rows, and columns containing a start date, and an end date";
+							}
+							else {
+								//For all the columns
+								for (l = 0; l < table.tr[k].td.length; l++) {
+									console.log('giriyor');
+									console.log(table.tr[k].td);
+									var columnData = table.tr[k].td[l];
+									//console.log(columnData);
+									//if algorithmStart is true, than read the date from the rows,
+									//and store them in the dates array, if they are both filled and they
+									//are both Dates.
+									if(algorithmStart){
+										var a = 0;
+										//	if(
+
+										console.log('cikiyor');
+									}
+									else {
+										//Checking for two adjacent columns containing dates.
+										//If they are not adjacent, this is not an acceptable row 
+										//for the algorithm.
+										//Check the first column with a date in it.
+										//if(!firstDateColumnFound) {
+										//checking if date, if it is 
+										//set firstDateColumnFound,firstDateRow,firsDateColumn
+										console.log(columnData);
+										if(dateFound = checkColumnIfDate(columnData)) {
+											console.log('buraya niye girmiyor?');
+
+											firstDateColumnFound = true;
+											firstDateRow = k;
+											firstDateColumn = l;
+											dates[dateLength] = [];
+											dates[dateLength, dateLength] = dateFound;
+										}
+										//}
+										if(firstDateColumnFound && !secondDateColumnFound) {
+											//checking if date, if it is 
+											//set secondDateColumnFound, secondDateColumn
+											if(dateFound = checkColumnIfDate(columnData)) {
+												secondDateColumnFound = true;
+												secondDateColumn = l;
+												dates[dateLength][dateLength + 1] = dateFound;
+												algorithmStart = true;
+												console.log('buraya da giriyor');
+											}
+										}
+									}
+								}//end of for all the columns
+							}//end of else
+							table = true;
+
+							//finish
+							//console.log(middleKeys[j]);
+							return true;
+						}//end of for all the rows
+					}//end of if table
+				}
+			}//end of for topkeys
+		});//end of xmlsimple.parse());
+
+
 	});// end of fs.readFile()
-	res.redirect('/');
+	res.render('index');
+}//end of exports.check
+
+checkColumnIfDate = function(columnData) {
+	//Data can be found in two ways in the table.
+	// 1)columnData.span['\#'] 2)columnData['\#']
+	//Check if the data is a Date.
+	//find the first columnData with the date.
+	//console.log(columnData);
+	var dateFound, date;
+	if (columnData.span && columnData.span['\#']) {
+		//console.log(columnData.span['\#']);
+		if (date = returnIfDate(columnData.span['\#'])) {
+			dateFound = date;
+		}
+		//console.log('row: ' + k + ' ,columnData: ' + l);
+	}
+	if (columnData['\#']){
+		if (date = returnIfDate(columnData['\#'])) {
+			dateFound = date;
+		}
+	}
+	console.log('hic cikti mi peki buradan?');
+	console.log(dateFound);
+	return dateFound;
+
 }
+
+returnIfDate = function(check) {
+	var date = moment(check);
+	if (date.isValid()) {
+		return date;
+	}
+	else {
+		return null;
+	}
+}
+
 
 // home page
 exports.index = function(req, res) {
@@ -129,7 +204,8 @@ exports.index = function(req, res) {
 			res.render('index');
 			});*/
 	} else {
-		res.render('index');
+		//res.render('index');
+		res.redirect('check');
 	}
 };
 
