@@ -13,6 +13,8 @@
     "evernote": "*",
 		"xml2js": "*",
 		"moment": "*",
-		"nodemon": "*"
+		"nodemon": "*",
+		"mocha": "*",
+		"expect.js": "*"
   }
 }
