@@ -64,79 +64,115 @@ exports.check = function(req,res) {
 							if(table.tr[k].td.length < 2) {
 								return "There are not enough number of columns.  Chalish requires at least 2 rows, and columns containing a start date, and an end date";
 							}
+							else if(algorithmStart) {
+								//table is found.
+								//it has two adjacent date columns.
+								//so we can read from the table 
+								//because we know the positions of the dates.
+								//we will only take the rows that has both Date values full.
+								//console.log('basliyor, row: ' + k);
+								//console.log(firstDateColumn);
+								//console.log(table.tr[k].td[firstDateColumn]);
+								var dateColumn1 = null; dateColumn2 = null;
+
+								dateColumn1 = checkColumnIfDate(table.tr[k].td[firstDateColumn]);
+								//console.log('dateColumn1: ' + JSON.stringify(dateColumn1));
+								//sconsole.log(table.tr[k].td[secondDateColumn]);
+								dateColumn2 = checkColumnIfDate(table.tr[k].td[secondDateColumn]);
+								//console.log('dateColumn2: ' + JSON.stringify(dateColumn2));
+								//var dateColumnFound1 = null, dateColumnFound2 = null; 
+								if(dateColumn1 && dateColumn2) {
+									//since both are full, they are eligible for taking place
+									//in the graph, so add them to the Dates Array.
+									dates[++dateLength] = [];
+									dates[dateLength][0] = dateColumn1;
+									dates[dateLength][1] = dateColumn2;
+									//console.log('datelength: ' + dateLength);
+								}
+								//console.log('bitiyor');
+								//console.log(dateLength);
+							}
 							else {
 								//For all the columns
 								//console.log('here important, printin out length of row: ' +table.tr[k].td.length );
 								for (l = 0; l < table.tr[k].td.length; l++) {
-									
+
 									//console.log('column: ' + l);
 									//console.log('printing out column data: ' + JSON.stringify(table.tr[k].td));
-									
+
 									var columnData = table.tr[k].td[l];
 									//console.log(columnData);
 									//if algorithmStart is true, than read the date from the rows,
 									//and store them in the dates array, if they are both filled and they
 									//are both Dates.
-									if(algorithmStart){
-										var a = 0;
-										//console.log('calisiyorrrrr');
-										//	if(
+									//Checking for two adjacent columns containing dates.
+									//If they are not adjacent, this is not an acceptable row 
+									//for the algorithm.
+									//Check the first column with a date in it.
+									//checking if date, if it is 
+									//set firstDateColumnFound,firstDateRow,firsDateColumn
+
+
+									//console.log('printing out columndata: ' + JSON.stringify(columnData));
+
+									//console.log('buraya niye girmiyor?');
+
+									//!firstDateColumnFound is used for not entering the same condition again
+									if(!firstDateColumnFound) {
+										if(dateFound = checkColumnIfDate(columnData)) {
+											firstDateColumnFound = true;
+											firstDateRow = k;
+											firstDateColumn = l;
+											//as long as the algorithmStart is not satisfied,
+											//it will be safe to overwrite the 0th element 
+											//of the date array.  When algorithmStart is satisfied,
+											//it won't enter to this block of code anymore.
+											dates[0] = [];
+											dates[0][0] = dateFound;
+											//continue is used so it doesn't enter the condition below.
+											continue;
+										}
 									}
-									else {
-										//Checking for two adjacent columns containing dates.
-										//If they are not adjacent, this is not an acceptable row 
-										//for the algorithm.
-										//Check the first column with a date in it.
+									if(firstDateColumnFound && !secondDateColumnFound) {
+										//console.log('vat');
 										//checking if date, if it is 
-										//set firstDateColumnFound,firstDateRow,firsDateColumn
-										
-										
-										//console.log('printing out columndata: ' + JSON.stringify(columnData));
-										
-										//console.log('buraya niye girmiyor?');
-
-										//!firstDateColumnFound is used for not entering the same condition again
-										if(!firstDateColumnFound) {
-											if(dateFound = checkColumnIfDate(columnData)) {
-												firstDateColumnFound = true;
-												firstDateRow = k;
-												firstDateColumn = l;
-												dates[dateLength] = [];
-												dates[dateLength, 0] = dateFound;
-												//continue is used so it doesn't enter the condition below.
-												continue;
-											}
-										}
-										if(firstDateColumnFound && !secondDateColumnFound) {
-											//console.log('vat');
-											//checking if date, if it is 
-											//set secondDateColumnFound, secondDateColumn
-											if(dateFound = checkColumnIfDate(columnData)) {
-												secondDateColumnFound = true;
-												secondDateColumn = l;
-												dates[dateLength, 1] = dateFound;
-												algorithmStart = true;
-												//console.log('buraya da giriyor');
-											}
+										//set secondDateColumnFound, secondDateColumn
+										if(dateFound = checkColumnIfDate(columnData)) {
+											secondDateColumnFound = true;
+											secondDateColumn = l;
+											dates[0][1] = dateFound;
+											//stopping the search for two adjacent 
+											//date columns, because they are found.
+											algorithmStart = true;
+											//console.log('buraya da giriyor');
 										}
 									}
-								}//end of for all the columns
-							}//end of else
-						}//end of for all the rows
-					}//end of if table
+									//}
+							}//end of for all the columns
+						}//end of else
+					}//end of for all the rows
 					table = true;
-
-					//finish
-					//console.log(middleKeys[j]);
-					//return true;
-
+				}//end of if table
+				//since table is already found, no need to continue.
+				if(table) {
+					break;
 				}
-			}//end of for topkeys
-		});//end of xmlsimple.parse());
+			}//end of for middlekeys
+			if(table) {
+				break;
+			}
+		} //end of for topkeys
+		//console.log('dates array: ' + JSON.stringify(dates));		
+		//Date Array is ready
+		//Moving onto d3.js or highcharts
 
 
-	});// end of fs.readFile()
-	res.render('index');
+
+	});//end of xmlsimple.parse());
+
+
+});// end of fs.readFile()
+res.render('index');
 }//end of exports.check
 
 checkColumnIfDate = function(columnData) {
