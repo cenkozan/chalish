@@ -4,7 +4,8 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "start": "/usr/local/share/npm/lib/node_modules/nodemon/nodemon.js app.js"
+    "start": "nodemon app.js",
+		"test": "mocha"
   },
   "dependencies": {
     "express": "3.1.0",
@@ -12,9 +13,12 @@
     "less-middleware": "*",
     "evernote": "*",
 		"xml2js": "*",
-		"moment": "*",
+		"moment": "*"
+	},
+	"devDependencies": {
 		"nodemon": "*",
 		"mocha": "*",
-		"expect.js": "*"
-  }
+		"expect.js": "*",
+		"should": "*"
+	}
 }

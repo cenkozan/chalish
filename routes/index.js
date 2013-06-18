@@ -5,19 +5,19 @@ var callbackUrl = "http://localhost:3000/oauth_callback";
 
 var fs = require('fs');
 var sys = require('sys');
-var xml2js = require('xml2js');
+//var xml2js = require('xml2js');
 var xmlsimple = require('xml-simple');
 var moment = require('moment');
 
 // checking the notes for tables, dates
 exports.check = function(req,res) {
-	var table = false;
+	var table;
 	fs.readFile('a.txt', function(err, xml) {
 		//console.log(data);
-		parser = new xml2js.Parser();
+		//parser = new xml2js.Parser();
 		xmlsimple.parse(xml, function(err, parsed) {
 			var topKeys = Object.keys(parsed);
-			console.log(parsed);
+			//console.log(parsed);
 
 			//Variables to be used in algorithm.
 			var i,j,k,l, middleKeys;
@@ -34,34 +34,44 @@ exports.check = function(req,res) {
 			//checking for a table.
 			for (i = 0; i < topKeys.length; i++) {
 				middleKeys = parsed[topKeys[i]];
-				console.log(middleKeys);
+				//console.log(middleKeys);
 				for(j=0; j < middleKeys.length; j++){
 					//Checking for a table.
 					if(Object.keys(middleKeys[j]) == 'table') {
 
-						console.log('printing out' + middleKeys[j]);
+						//console.log('printing out' + JSON.stringify(middleKeys[j]));
 						table = middleKeys[j].table;
 
-						console.log('printing out table' + table);
+						//console.log('printing out table' + JSON.stringify(table));
 						var dateFound;
 
 						//For all the rows
+						//console.log('how many rows: ' + table.tr.length);
 						for(k = 0; k < table.tr.length; k++){
 							//Reset firstDateColumnFound if algorithmStart 
 							//is not set.  Two columns have to be adjacent for the algorithmStart
-							console.log('giriyor');
+							//console.log('row: ' + k);
 							if(!algorithmStart) {
 								firstDateColumnFound = false;
 							}
+
+
+
+							//console.log('printing out the row data: '+ JSON.stringify(table.tr[k]));
+
+
 							//if the table contains only 1 column, return false
 							if(table.tr[k].td.length < 2) {
 								return "There are not enough number of columns.  Chalish requires at least 2 rows, and columns containing a start date, and an end date";
 							}
 							else {
 								//For all the columns
+								//console.log('here important, printin out length of row: ' +table.tr[k].td.length );
 								for (l = 0; l < table.tr[k].td.length; l++) {
-									console.log('giriyor');
-									console.log(table.tr[k].td);
+									
+									//console.log('column: ' + l);
+									//console.log('printing out column data: ' + JSON.stringify(table.tr[k].td));
+									
 									var columnData = table.tr[k].td[l];
 									//console.log(columnData);
 									//if algorithmStart is true, than read the date from the rows,
@@ -69,50 +79,57 @@ exports.check = function(req,res) {
 									//are both Dates.
 									if(algorithmStart){
 										var a = 0;
+										//console.log('calisiyorrrrr');
 										//	if(
-
-										console.log('cikiyor');
 									}
 									else {
 										//Checking for two adjacent columns containing dates.
 										//If they are not adjacent, this is not an acceptable row 
 										//for the algorithm.
 										//Check the first column with a date in it.
-										//if(!firstDateColumnFound) {
 										//checking if date, if it is 
 										//set firstDateColumnFound,firstDateRow,firsDateColumn
-										console.log(columnData);
-										if(dateFound = checkColumnIfDate(columnData)) {
-											console.log('buraya niye girmiyor?');
+										
+										
+										//console.log('printing out columndata: ' + JSON.stringify(columnData));
+										
+										//console.log('buraya niye girmiyor?');
 
-											firstDateColumnFound = true;
-											firstDateRow = k;
-											firstDateColumn = l;
-											dates[dateLength] = [];
-											dates[dateLength, dateLength] = dateFound;
+										//!firstDateColumnFound is used for not entering the same condition again
+										if(!firstDateColumnFound) {
+											if(dateFound = checkColumnIfDate(columnData)) {
+												firstDateColumnFound = true;
+												firstDateRow = k;
+												firstDateColumn = l;
+												dates[dateLength] = [];
+												dates[dateLength, 0] = dateFound;
+												//continue is used so it doesn't enter the condition below.
+												continue;
+											}
 										}
-										//}
 										if(firstDateColumnFound && !secondDateColumnFound) {
+											//console.log('vat');
 											//checking if date, if it is 
 											//set secondDateColumnFound, secondDateColumn
 											if(dateFound = checkColumnIfDate(columnData)) {
 												secondDateColumnFound = true;
 												secondDateColumn = l;
-												dates[dateLength][dateLength + 1] = dateFound;
+												dates[dateLength, 1] = dateFound;
 												algorithmStart = true;
-												console.log('buraya da giriyor');
+												//console.log('buraya da giriyor');
 											}
 										}
 									}
 								}//end of for all the columns
 							}//end of else
-							table = true;
-
-							//finish
-							//console.log(middleKeys[j]);
-							return true;
 						}//end of for all the rows
 					}//end of if table
+					table = true;
+
+					//finish
+					//console.log(middleKeys[j]);
+					//return true;
+
 				}
 			}//end of for topkeys
 		});//end of xmlsimple.parse());
@@ -127,10 +144,11 @@ checkColumnIfDate = function(columnData) {
 	// 1)columnData.span['\#'] 2)columnData['\#']
 	//Check if the data is a Date.
 	//find the first columnData with the date.
-	//console.log(columnData);
-	var dateFound, date;
+	//console.log('buraya mi');
+	//console.log(JSON.stringify(columnData));
+	var dateFound = null, date = null;
 	if (columnData.span && columnData.span['\#']) {
-		//console.log(columnData.span['\#']);
+		//console.log('spanli ve # bununlu: ' + columnData.span['\#']);
 		if (date = returnIfDate(columnData.span['\#'])) {
 			dateFound = date;
 		}
@@ -141,8 +159,8 @@ checkColumnIfDate = function(columnData) {
 			dateFound = date;
 		}
 	}
-	console.log('hic cikti mi peki buradan?');
-	console.log(dateFound);
+	//console.log('hic cikti mi peki buradan?');
+	//console.log(dateFound);
 	return dateFound;
 
 }
