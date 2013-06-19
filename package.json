@@ -13,7 +13,9 @@
     "less-middleware": "*",
     "evernote": "*",
 		"xml2js": "*",
-		"moment": "*"
+		"moment": "*",
+		"phantomjs": "*",
+		"d3": "*"
 	},
 	"devDependencies": {
 		"nodemon": "*",

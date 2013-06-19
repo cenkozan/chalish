@@ -8,8 +8,15 @@ var sys = require('sys');
 //var xml2js = require('xml2js');
 var xmlsimple = require('xml-simple');
 var moment = require('moment');
-
+var childProcess = require('child_process');
+var phantomjs = require('phantomjs');
+//var binPath = phantomjs.path;
 // checking the notes for tables, dates
+
+exports.highcharts = function(req,res) {
+	res.render('highcharts');
+}
+
 exports.check = function(req,res) {
 	var table;
 	fs.readFile('a.txt', function(err, xml) {
@@ -262,7 +269,8 @@ exports.index = function(req, res) {
 			});*/
 	} else {
 		//res.render('index');
-		res.redirect('check');
+		//res.redirect('check');
+		res.redirect('highcharts');
 	}
 };
 
