@@ -170,17 +170,58 @@ exports.check = function(req,res) {
 			}
 		} //end of for topkeys
 		//console.log('dates array: ' + JSON.stringify(dates));		
+		dateString = JSON.stringify(dates);
 		//Date Array is ready
-		//Moving onto d3.js or highcharts
+		//Moving onto highcharts
+		//I have the dates now, find the min of the start dates.
+		function sortFunction(a,b){  
+			var dateA = new Date(a[0][0]).getTime();
+			var dateB = new Date(b[0][0]).getTime();
+			return dateA < dateB ? 1 : -1;  
+		}; 
 
+		//var array = [{id: 1, date: "Mar 12 2012 10:00:00 AM"},{id: 2, date: "Mar 28 2012 08:00:00 AM"}];
+		dates.sort(sortFunction);
+		//console.log(JSON.stringify(dates));
+
+		var graphStartDate, graphStartMonth, graphStartYear;
+
+		var monthNamesArray = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+				xAxis = monthNamesArray.unshift('Prev. Av.'),
+				graphStartMonth = dates[0][0].format('MMM'),
+				graphStartYear = dates[0][0].format('YYYY'),
+				previousYearData = null;
+		//here we check the matching month name, we don't take the preceding months
+
+		if(moment().format('YYYY') > graphStartYear) {
+			previousYearData = extractPreviousYearsData(dates);
+		}
+		else {
+			return monthsAndNumberOfWorksDone(dates);
+		}
+
+		while (monthNamesArray[0] != graphStartMonth) {
+			monthNamesArray.shift();
+		}
+
+		console.log(monthNamesArray);
+
+
+		//and lastly, pass the parameters to view.
+		res.render('notes', {xAxis: xAxis, dates: dateString});
 
 
 	});//end of xmlsimple.parse());
 
 
 });// end of fs.readFile()
-res.render('index');
+//res.render('index');
 }//end of exports.check
+
+extractPreviousYearsData = function(dates) {
+	var previousYearData = [];
+	return previousYearData;
+}
 
 checkColumnIfDate = function(columnData) {
 	//Data can be found in two ways in the table.
@@ -269,8 +310,8 @@ exports.index = function(req, res) {
 			});*/
 	} else {
 		//res.render('index');
-		//res.redirect('check');
-		res.redirect('highcharts');
+		res.redirect('check');
+		//res.redirect('highcharts');
 	}
 };
 
