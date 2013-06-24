@@ -7,25 +7,9 @@ block content
   article#highcharts
     p Highcharts is a charting library written in pure JavaScript, offering intuitive, interactive charts to your web site or web application. Highcharts currently supports line, spline, area, areaspline, column, bar, pie and scatter chart types.
     
+    #pie
     #bar
 
 block scripts
   script(src='/js/libs/highcharts.js')
-  script(type='text/javascript')
-    $(function () {
-      $(document).ready(function() {
-      var chart = new Highcharts.Chart({
-        chart: {
-          renderTo: 'bar',
-          type: 'column'
-        },
-        title: {
-          text: 'Dates'
-        },
-        xAxis: {
-          categories: !{monthNamesArray}},
-        series: [{name: 'Dates', data:!{data}}]
-      });
-      });
-    });
-
+  script(src='/js/highcharts.js')

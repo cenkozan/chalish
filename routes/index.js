@@ -3,13 +3,12 @@ var Evernote = require('evernote').Evernote;
 var config = require('../config.json');
 var callbackUrl = "http://localhost:3000/oauth_callback";
 
-var fs = require('fs');
+//var fs = require('fs');
 var sys = require('sys');
 //var xml2js = require('xml2js');
-var xmlsimple = require('xml-simple');
-var moment = require('moment');
 var childProcess = require('child_process');
 var phantomjs = require('phantomjs');
+var utilityModule = require('./utilityModule.js');
 //var binPath = phantomjs.path;
 // checking the notes for tables, dates
 
@@ -18,246 +17,28 @@ exports.highcharts = function(req,res) {
 }
 
 exports.check = function(req,res) {
-	var table;
-	fs.readFile('a.txt', function(err, xml) {
-		//console.log(data);
-		//parser = new xml2js.Parser();
-		xmlsimple.parse(xml, function(err, parsed) {
-			var topKeys = Object.keys(parsed);
-			//console.log(parsed);
+	//for now, read from a file, for offline, and speed reasons
+	console.log('processing');
+	//returns starts and end dates in an array.
+	var dates, numberOfWorksPerMounth,  monthNamesArray = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+	dates = utilityModule.processXML();
+	var sortFunction = function (a,b){  
+		var dateA = new Date(a[0][0]).getTime();
+		var dateB = new Date(b[0][0]).getTime();
+		return dateA < dateB ? 1 : -1;  
+	}; 
 
-			//Variables to be used in algorithm.
-			var i,j,k,l, middleKeys;
-			var dates = [];
-			var dateLength = 0;
-			var firstDateRow, firstDateColumn, secondDateColumn;
-			var firstDateColumnFound = false, secondDateColumnFound = false;
-			//start date and end date have to be adjacent for my algorithm to work
-			var algorithmStart;
-			//end variables to be used in algorithm.
+	dates.sort(sortFunction);
+	//console.log(JSON.stringify(dates));
+	numberOfWorksPerMonth = utilityModule.monthsAndNumberOfWorksDone(dates, monthNamesArray, false);
+	console.log('numberof works done per month= ', JSON.stringify(numberOfWorksPerMonth));
 
-
-			//xml returned
-			//checking for a table.
-			for (i = 0; i < topKeys.length; i++) {
-				middleKeys = parsed[topKeys[i]];
-				//console.log(middleKeys);
-				for(j=0; j < middleKeys.length; j++){
-					//Checking for a table.
-					if(Object.keys(middleKeys[j]) == 'table') {
-
-						//console.log('printing out' + JSON.stringify(middleKeys[j]));
-						table = middleKeys[j].table;
-
-						//console.log('printing out table' + JSON.stringify(table));
-						var dateFound;
-
-						//For all the rows
-						//console.log('how many rows: ' + table.tr.length);
-						for(k = 0; k < table.tr.length; k++){
-							//Reset firstDateColumnFound if algorithmStart 
-							//is not set.  Two columns have to be adjacent for the algorithmStart
-							//console.log('row: ' + k);
-							if(!algorithmStart) {
-								firstDateColumnFound = false;
-							}
+	res.render('notes', {monthNamesArray: JSON.stringify(monthNamesArray), data: JSON.stringify(numberOfWorksPerMonth)});
+	console.log('processed');
+	//res.render('index');
 
 
-
-							//console.log('printing out the row data: '+ JSON.stringify(table.tr[k]));
-
-
-							//if the table contains only 1 column, return false
-							if(table.tr[k].td.length < 2) {
-								return "There are not enough number of columns.  Chalish requires at least 2 rows, and columns containing a start date, and an end date";
-							}
-							else if(algorithmStart) {
-								//table is found.
-								//it has two adjacent date columns.
-								//so we can read from the table 
-								//because we know the positions of the dates.
-								//we will only take the rows that has both Date values full.
-								//console.log('basliyor, row: ' + k);
-								//console.log(firstDateColumn);
-								//console.log(table.tr[k].td[firstDateColumn]);
-								var dateColumn1 = null; dateColumn2 = null;
-
-								dateColumn1 = checkColumnIfDate(table.tr[k].td[firstDateColumn]);
-								//console.log('dateColumn1: ' + JSON.stringify(dateColumn1));
-								//sconsole.log(table.tr[k].td[secondDateColumn]);
-								dateColumn2 = checkColumnIfDate(table.tr[k].td[secondDateColumn]);
-								//console.log('dateColumn2: ' + JSON.stringify(dateColumn2));
-								//var dateColumnFound1 = null, dateColumnFound2 = null; 
-								if(dateColumn1 && dateColumn2) {
-									//since both are full, they are eligible for taking place
-									//in the graph, so add them to the Dates Array.
-									dates[++dateLength] = [];
-									dates[dateLength][0] = dateColumn1;
-									dates[dateLength][1] = dateColumn2;
-									//console.log('datelength: ' + dateLength);
-								}
-								//console.log('bitiyor');
-								//console.log(dateLength);
-							}
-							else {
-								//For all the columns
-								//console.log('here important, printin out length of row: ' +table.tr[k].td.length );
-								for (l = 0; l < table.tr[k].td.length; l++) {
-
-									//console.log('column: ' + l);
-									//console.log('printing out column data: ' + JSON.stringify(table.tr[k].td));
-
-									var columnData = table.tr[k].td[l];
-									//console.log(columnData);
-									//if algorithmStart is true, than read the date from the rows,
-									//and store them in the dates array, if they are both filled and they
-									//are both Dates.
-									//Checking for two adjacent columns containing dates.
-									//If they are not adjacent, this is not an acceptable row 
-									//for the algorithm.
-									//Check the first column with a date in it.
-									//checking if date, if it is 
-									//set firstDateColumnFound,firstDateRow,firsDateColumn
-
-
-									//console.log('printing out columndata: ' + JSON.stringify(columnData));
-
-									//console.log('buraya niye girmiyor?');
-
-									//!firstDateColumnFound is used for not entering the same condition again
-									if(!firstDateColumnFound) {
-										if(dateFound = checkColumnIfDate(columnData)) {
-											firstDateColumnFound = true;
-											firstDateRow = k;
-											firstDateColumn = l;
-											//as long as the algorithmStart is not satisfied,
-											//it will be safe to overwrite the 0th element 
-											//of the date array.  When algorithmStart is satisfied,
-											//it won't enter to this block of code anymore.
-											dates[0] = [];
-											dates[0][0] = dateFound;
-											//continue is used so it doesn't enter the condition below.
-											continue;
-										}
-									}
-									if(firstDateColumnFound && !secondDateColumnFound) {
-										//console.log('vat');
-										//checking if date, if it is 
-										//set secondDateColumnFound, secondDateColumn
-										if(dateFound = checkColumnIfDate(columnData)) {
-											secondDateColumnFound = true;
-											secondDateColumn = l;
-											dates[0][1] = dateFound;
-											//stopping the search for two adjacent 
-											//date columns, because they are found.
-											algorithmStart = true;
-											//console.log('buraya da giriyor');
-										}
-									}
-									//}
-							}//end of for all the columns
-						}//end of else
-					}//end of for all the rows
-					table = true;
-				}//end of if table
-				//since table is already found, no need to continue.
-				if(table) {
-					break;
-				}
-			}//end of for middlekeys
-			if(table) {
-				break;
-			}
-		} //end of for topkeys
-		//console.log('dates array: ' + JSON.stringify(dates));		
-		dateString = JSON.stringify(dates);
-		//Date Array is ready
-		//Moving onto highcharts
-		//I have the dates now, find the min of the start dates.
-		function sortFunction(a,b){  
-			var dateA = new Date(a[0][0]).getTime();
-			var dateB = new Date(b[0][0]).getTime();
-			return dateA < dateB ? 1 : -1;  
-		}; 
-
-		//var array = [{id: 1, date: "Mar 12 2012 10:00:00 AM"},{id: 2, date: "Mar 28 2012 08:00:00 AM"}];
-		dates.sort(sortFunction);
-		//console.log(JSON.stringify(dates));
-
-		var graphStartDate, graphStartMonth, graphStartYear;
-
-		var monthNamesArray = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-				xAxis = monthNamesArray.unshift('Prev. Av.'),
-				graphStartMonth = dates[0][0].format('MMM'),
-				graphStartYear = dates[0][0].format('YYYY'),
-				previousYearData = null;
-		//here we check the matching month name, we don't take the preceding months
-
-		if(moment().format('YYYY') > graphStartYear) {
-			previousYearData = extractPreviousYearsData(dates);
-		}
-		else {
-			return monthsAndNumberOfWorksDone(dates);
-		}
-
-		while (monthNamesArray[0] != graphStartMonth) {
-			monthNamesArray.shift();
-		}
-
-		console.log(monthNamesArray);
-
-
-		//and lastly, pass the parameters to view.
-		res.render('notes', {xAxis: xAxis, dates: dateString});
-
-
-	});//end of xmlsimple.parse());
-
-
-});// end of fs.readFile()
-//res.render('index');
 }//end of exports.check
-
-extractPreviousYearsData = function(dates) {
-	var previousYearData = [];
-	return previousYearData;
-}
-
-checkColumnIfDate = function(columnData) {
-	//Data can be found in two ways in the table.
-	// 1)columnData.span['\#'] 2)columnData['\#']
-	//Check if the data is a Date.
-	//find the first columnData with the date.
-	//console.log('buraya mi');
-	//console.log(JSON.stringify(columnData));
-	var dateFound = null, date = null;
-	if (columnData.span && columnData.span['\#']) {
-		//console.log('spanli ve # bununlu: ' + columnData.span['\#']);
-		if (date = returnIfDate(columnData.span['\#'])) {
-			dateFound = date;
-		}
-		//console.log('row: ' + k + ' ,columnData: ' + l);
-	}
-	if (columnData['\#']){
-		if (date = returnIfDate(columnData['\#'])) {
-			dateFound = date;
-		}
-	}
-	//console.log('hic cikti mi peki buradan?');
-	//console.log(dateFound);
-	return dateFound;
-
-}
-
-returnIfDate = function(check) {
-	var date = moment(check);
-	if (date.isValid()) {
-		return date;
-	}
-	else {
-		return null;
-	}
-}
 
 
 // home page
@@ -309,8 +90,8 @@ exports.index = function(req, res) {
 			res.render('index');
 			});*/
 	} else {
-		//res.render('index');
-		res.redirect('check');
+		res.render('index');
+		//res.redirect('check');
 		//res.redirect('highcharts');
 	}
 };
@@ -337,7 +118,6 @@ exports.oauth = function(req, res) {
 			res.redirect(client.getAuthorizeUrl(oauthToken));
 		}
 	});
-
 };
 
 // OAuth callback

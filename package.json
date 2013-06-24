@@ -15,7 +15,8 @@
 		"xml2js": "*",
 		"moment": "*",
 		"phantomjs": "*",
-		"d3": "*"
+		"d3": "*",
+		"node-xml-lite": "*"
 	},
 	"devDependencies": {
 		"nodemon": "*",
