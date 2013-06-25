@@ -2,68 +2,14 @@ extends layout
 
 block content
   h1 Welcome to Chalish
-  p
-    | Creates Charts from the Tables you keep in Evernote.
-    | Watch the video below 
-  hr
+  h2 
+    Creates Charts from the Tables you keep in 
+    a(href='http://www.evernote.com') Evernote.
+  p Watch the video below 
   - if(session.error)
     h2 Error
     p
       = session.error
   h2 To Start
-  - if(session.oauthAccessToken)
-    a(href='/clear') Click here
-    |  to 
-    | start over
-  - else
-    a(href='/oauth') Click here
-    |  to 
-    | connect Evernote
-
-  hr
-
-  <!-- Here goes my code to test the tables and rows and columns and dates and all, thank you. -->
-  a(href='/check') Click here
-    |  to 
-    | parse XML
-  - if(session.parseData)
-    p
-      =session.parseData
-
-  
-
-  - if(session.notebooks)
-    h2 Notebooks
-    ul
-      - for (var i = 0; i < session.notebooks.length; ++i)
-        li= session.notebooks[i].name
-  - if(session.note)
-    h2 Notes
-    ul
-      p Printing out NOTES!
-      - for (var i = 0; i < session.note.length; ++i)
-        li= session.note[i].title
-    hr
-  h2 Current status
-  ul
-    li
-      b NoteStore URL
-      = session.edamNoteStoreUrl
-    li
-      b Web API URL prefix: 
-      = session.edamNoteStoreUrl
-  h3 Token Credentials:
-  ul
-    li
-      b token:  
-      = session.oauthAccessToken
-    li
-      b secret:  
-      = session.oauthAccessTokenSecret
-    li
-      b User ID:  
-      = session.edamUserId
-    li
-      b Expires:  
-      = session.edamExpires
+  a(href='/oauth') Login with Evernote
 

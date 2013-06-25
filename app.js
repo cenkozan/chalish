@@ -33,11 +33,10 @@ app.configure('development', function(){
 
 // Routes
 app.get('/', routes.index);
-app.get('/check', routes.check);
+app.get('/notes', routes.notes);
 app.get('/oauth', routes.oauth);
 app.get('/oauth_callback', routes.oauth_callback);
 app.get('/clear', routes.clear);
-app.get('/highcharts', routes.highcharts);
 
 // Run
 http.createServer(app).listen(app.get('port'), function(){
