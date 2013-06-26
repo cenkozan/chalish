@@ -20,59 +20,85 @@ exports.notes = function(req,res) {
 			sandbox: config.SANDBOX});
 	var note_store = client.getNoteStore();
 
-	var note_filter = new Evernote.NoteFilter();
-	//note_filter.order = 'UPDATED';
-	//note_filter.ascending = 'false';
-	var filter 		= req.query.filter || note_filter;
-	var offset 		= req.query.offset || 0;
-	var maxNotes 		= req.query.maxNotes || '100';
-	var resultSpec = new Evernote.NotesMetadataResultSpec({includeTitle : 'true'});
-	//var resultSpec 		= req.query.resultSpec || '';
+	//console.log('req.body.select: ', req.body.select);
+	var selectedGuid = req.body.select;
+	console.log('selectedGuid: ', selectedGuid);
+	if(selectedGuid && selectedGuid != 0) {
+		var dates, numberOfWorksPerMounth,  monthNamesArray = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+		note_store.getNoteContent(token, selectedGuid, function(noteContent){
+			//console.log(noteContent);
+			utilityModule.processXML(noteContent, function callback(err, dates) {
+				if (err){
+					req.session.error = err;
+					res.render('notes', {monthNamesArray: null, data: null});
+				}
+				else {
+					console.log('dates: ', dates);
+					if (dates.length == 0) {
+						req.session.error = 'We couldn\'t find any table in the note you selected, please try again with another note.';
+						res.render('notes', {monthNamesArray: null, data: null});
+					}
+					else {
+						var sortFunction = function (a,b){  
+							var dateA = new Date(a[0][0]).getTime();
+							var dateB = new Date(b[0][0]).getTime();
+							return dateA < dateB ? 1 : -1;  
+						}; 
 
-	note_store.findNotesMetadata(token,  filter, offset, maxNotes, resultSpec, function(returnedData) {;
+						dates.sort(sortFunction);
+						//console.log(JSON.stringify(dates));
+						numberOfWorksPerMonth = utilityModule.monthsAndNumberOfWorksDone(dates, monthNamesArray, false);
+						console.log('numberof works done per month= ', JSON.stringify(numberOfWorksPerMonth));
 
-		if(returnedData.totalNotes === 0){
-			console.log('You have 0 notes in your Evernote Account. Chalish requires you have notes in your Evernote account.');
-		} else {
-			res.render('notes', {returnedData: returnedData.notes, data: null, monthNamesArray: null});
-			return;
+						res.render('notes', {monthNamesArray: JSON.stringify(monthNamesArray), data: JSON.stringify(numberOfWorksPerMonth)});
+					}
+				}
+			});
+		});	
 
-			/*console.log(notes.totalNotes);
-				var metadataList = new Evernote.NotesMetadataList();
-				metadataList = notes;
-				var note = new Evernote.NoteMetadata();
-				note = notes.notes;
-				req.session.note = note;
-				console.log(note);
-				for (var i = 0; i < metadataList.totalNotes; i++) {
-				console.log(note[i].guid);
-				note_store.getNoteContent(token, note[i].guid, function(callback){
-				console.log(callback);
-				});
-				}*/
+	}
+	else {
 
-			//for now, read from a file, for offline, and speed reasons
-			//console.log('processing');
-			//returns starts and end dates in an array.
-			var dates, numberOfWorksPerMounth,  monthNamesArray = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-			dates = utilityModule.processXML();
-			var sortFunction = function (a,b){  
-				var dateA = new Date(a[0][0]).getTime();
-				var dateB = new Date(b[0][0]).getTime();
-				return dateA < dateB ? 1 : -1;  
-			}; 
+		console.log('enters here');
+		//req.session.note_store = note_store;
 
-			dates.sort(sortFunction);
-			//console.log(JSON.stringify(dates));
-			numberOfWorksPerMonth = utilityModule.monthsAndNumberOfWorksDone(dates, monthNamesArray, false);
-			console.log('numberof works done per month= ', JSON.stringify(numberOfWorksPerMonth));
+		var note_filter = new Evernote.NoteFilter();
+		//note_filter.order = 'UPDATED';
+		//note_filter.ascending = 'false';
+		var filter 		= req.query.filter || note_filter;
+		var offset 		= req.query.offset || 0;
+		var maxNotes 		= req.query.maxNotes || '100';
+		var resultSpec = new Evernote.NotesMetadataResultSpec({includeTitle : 'true'});
+		//var resultSpec 		= req.query.resultSpec || '';
 
-			res.render('notes', {monthNamesArray: JSON.stringify(monthNamesArray), data: JSON.stringify(numberOfWorksPerMonth)});
-			console.log('processed');
-			res.render('notes');
+		note_store.findNotesMetadata(token,  filter, offset, maxNotes, resultSpec, function(returnedData) {;
 
-		}
-	});
+			if(returnedData.totalNotes === 0){
+				console.log('You have 0 notes in your Evernote Account. Chalish requires you have notes in your Evernote account.');
+			} else {
+				var notes = returnedData.notes;
+				res.render('notes', {notes: notes, data: null, monthNamesArray: null});
+				req.session.notes = notes;
+				/*console.log(notes.totalNotes);
+					var metadataList = new Evernote.NotesMetadataList();
+					metadataList = notes;
+					var note = new Evernote.NoteMetadata();
+					note = notes.notes;
+					req.session.note = note;
+					console.log(note);
+					for (var i = 0; i < metadataList.totalNotes; i++) {
+					console.log(note[i].guid);
+					note_store.getNoteContent(token, note[i].guid, function(callback){
+					console.log(callback);
+					});
+					}*/
+
+				//for now, read from a file, for offline, and speed reasons
+				//console.log('processing');
+				//returns starts and end dates in an array.
+			}
+		});
+	}
 	/*note_store.listNotebooks(token, function(notebooks){
 		req.session.notebooks = notebooks;
 		res.render('index');

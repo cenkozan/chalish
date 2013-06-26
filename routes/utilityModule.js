@@ -1,4 +1,5 @@
 var xmlsimple = require('xml-simple');
+var xml2js = require('xml2js');
 var moment = require('moment');
 var fs = require('fs');
 var nodexmllite = require('node-xml-lite');
@@ -12,7 +13,7 @@ var monthsAndNumberOfWorksDone = function (dates, monthNamesArray, average) {
 	//console.log('dates: ', JSON.stringify(dates));
 	var toReturn = new Array(12), average;
 	/*toReturn[0][0] = monthNamesArray[0];
-	toReturn[0][1] = 0;*/
+		toReturn[0][1] = 0;*/
 	for(var k = 11; k >= 0; k--){
 		toReturn[k] = 0;
 		//toReturn[k] = [];
@@ -46,137 +47,152 @@ var monthsAndNumberOfWorksDone = function (dates, monthNamesArray, average) {
 	}
 }
 
-var processXML = function () {
+var processXML = function (noteContent, callback) {
 	var table;
-	var parsed = nodexmllite.parseFileSync('a.txt');
-	//console.log(parsed);
-	//console.log(parsed.childs.length);
-	//Variables to be used in algorithm.
-	//start date and end date have to be adjacent for 
-	//my algorithm to work, algorithmStart will look for this condition.
-	var i,j,k,l, rowLength, columnLength, table, dates = [], dateLength = 0, firstDateColumn, secondDateColumn, firstDateColumnFound = false, secondDateColumnFound = false, algorithmStart, dateColumn1, dateColumn2, dateFound, columnData;
-	//end variables to be used in algorithm.
-	
+	//console.log(noteContent);
+	//var parser = new xml2js.Parser();
+	//console.log(callback.toString().trim());
+	try {
+		//noteContent = noteContent.toString().replace( new RegExp( "\>[\n\t ]+\<" , "g" ) , "><" );
+		console.log(noteContent);
+		var parsed = nodexmllite.parseString(noteContent);
+		/*callback = Object.toString(callback);
+			callback = callback.replace(/\s+/g,"");
+			var parsed = nodexmllite.parseString(callback);
+			console.log(parsed);*/
+		//console.log(parsed.childs.length);
+		//Variables to be used in algorithm.
+		//start date and end date have to be adjacent for 
+		//my algorithm to work, algorithmStart will look for this condition.
+		var i,j,k,l, rowLength, columnLength, table, dates = [], dateLength = 0, firstDateColumn, secondDateColumn, firstDateColumnFound = false, secondDateColumnFound = false, algorithmStart, dateColumn1, dateColumn2, dateFound, columnData;
+		//end variables to be used in algorithm.
 
-	for (i = parsed.childs.length - 1; i >= 0; i--) {
-		//console.log(parsed.childs[i]);
-		//console.log('printing: ', parsed.childs[i].childs[0].name);
-		//for(var j = parsed.childs[i].length
-		if(parsed.childs[i].childs[0].name == 'table') {
-			console.log('there is a table');
-			//console.log(parsed.childs[i].childs[0].childs);
-			table = parsed.childs[i].childs[0].childs;
-			//console.log('tableeee: ', table);
-			rowLength = table.length;
-			for(j = 0; j < rowLength; j++){
-				//Reset firstDateColumnFound if algorithmStart 
-				//is not set.  Two columns have to be adjacent for the algorithmStart
-				//console.log('row: ' + j);
-				if (!algorithmStart) {
-					firstDateColumnFound = false;
-				}
-
-				//if the table contains only 1 column, return false
-				columnLength = table[j].childs.length;
-				if (columnLength < 2) {
-					return "There are not enough number of columns.  Chalish requires at least 2 rows, and columns containing a start date, and an end date";
-				}
-				else if (algorithmStart) {
-					//table is found.
-					//it has two adjacent date columns.
-					//so we can read from the table 
-					//because we know the positions of the dates.
-					//we will only take the rows that has both Date values full.
-					////console.log('basliyor, row: ' + k);
-					//console.log(firstDateColumn);
-					//console.log(secondDateColumn);
-					//console.log('firstDateColumn: ', table[j].childs[firstDateColumn]);
-					dateColumn1 = checkColumnIfDate(table[j].childs[firstDateColumn]);
-					////console.log('dateColumn1: ' + JSON.stringify(dateColumn1));
-					//console.log('secondDateColumn: ', table[j].childs[secondDateColumn]);
-					dateColumn2 = checkColumnIfDate(table[j].childs[secondDateColumn]);
-					////console.log('dateColumn2: ' + JSON.stringify(dateColumn2));
-					//var dateColumnFound1 = null, dateColumnFound2 = null; 
-					if (dateColumn1 && dateColumn2) {
-						//since both are full, they are eligible for taking place
-						//in the graph, so add them to the Dates Array.
-						dates[++dateLength] = [];
-						dates[dateLength][0] = dateColumn1;
-						dates[dateLength][1] = dateColumn2;
-						////console.log('datelength: ' + dateLength);
+		console.log('length: ', parsed.childs.length);
+		for (i = parsed.childs.length - 1; i >= 0; i--) {
+			//console.log(parsed.childs[i]);
+			//console.log('printing: ', parsed.childs[i].childs[0].name);
+			//for(var j = parsed.childs[i].length
+			if(parsed.childs[i].childs[0].name == 'table') {
+				console.log('there is a table');
+				//console.log(parsed.childs[i].childs[0].childs);
+				table = parsed.childs[i].childs[0].childs;
+				//console.log('tableeee: ', table);
+				rowLength = table.length;
+				for(j = 0; j < rowLength; j++){
+					//Reset firstDateColumnFound if algorithmStart 
+					//is not set.  Two columns have to be adjacent for the algorithmStart
+					//console.log('row: ' + j);
+					if (!algorithmStart) {
+						firstDateColumnFound = false;
 					}
-					////console.log('bitiyor');
-					////console.log(dateLength);
-				}
-				else {
-					//console.log('hereeeeee');
-					//For all the columns
-					////console.log('here important, printin out length of row: ' +table.tr[k].td.length );
-					for (k = 0; k < columnLength; k++) {
 
-						////console.log('column: ' + l);
-						////console.log('printing out column data: ' + JSON.stringify(table.tr[k].td));
-
-						columnData = table[j].childs[k];
-						//console.log('column data: ', columnData);
-						//if algorithmStart is true, than read the date from the rows,
-						//and store them in the dates array, if they are both filled and they
-						//are both Dates.
-						//Checking for two adjacent columns containing dates.
-						//If they are not adjacent, this is not an acceptable row 
-						//for the algorithm.
-						//Check the first column with a date in it.
-						//checking if date, if it is 
-						//set firstDateColumnFound,firstDateRow,firsDateColumn
-
-
-						////console.log('printing out columndata: ' + JSON.stringify(columnData));
-
-						////console.log('buraya niye girmiyor?');
-
-						//!firstDateColumnFound is used for not entering the same condition again
-						if (!firstDateColumnFound) {
-							if (dateFound = checkColumnIfDate(columnData)) {
-								firstDateColumnFound = true;
-								//firstDateRow = j;
-								firstDateColumn = k;
-								//as long as the algorithmStart is not satisfied,
-								//it will be safe to overwrite the 0th element 
-								//of the date array.  When algorithmStart is satisfied,
-								//it won't enter to this block of code anymore.
-								dates[0] = [];
-								dates[0][0] = dateFound;
-								//continue is used so it doesn't enter the condition below.
-								continue;
-							}
+					//if the table contains only 1 column, return false
+					columnLength = table[j].childs.length;
+					if (columnLength < 2) {
+						return "There are not enough number of columns.  Chalish requires at least 2 rows, and columns containing a start date, and an end date";
+					}
+					else if (algorithmStart) {
+						//table is found.
+						//it has two adjacent date columns.
+						//so we can read from the table 
+						//because we know the positions of the dates.
+						//we will only take the rows that has both Date values full.
+						////console.log('basliyor, row: ' + k);
+						//console.log(firstDateColumn);
+						//console.log(secondDateColumn);
+						//console.log('firstDateColumn: ', table[j].childs[firstDateColumn]);
+						dateColumn1 = checkColumnIfDate(table[j].childs[firstDateColumn]);
+						////console.log('dateColumn1: ' + JSON.stringify(dateColumn1));
+						//console.log('secondDateColumn: ', table[j].childs[secondDateColumn]);
+						dateColumn2 = checkColumnIfDate(table[j].childs[secondDateColumn]);
+						////console.log('dateColumn2: ' + JSON.stringify(dateColumn2));
+						//var dateColumnFound1 = null, dateColumnFound2 = null; 
+						if (dateColumn1 && dateColumn2) {
+							//since both are full, they are eligible for taking place
+							//in the graph, so add them to the Dates Array.
+							dates[++dateLength] = [];
+							dates[dateLength][0] = dateColumn1;
+							dates[dateLength][1] = dateColumn2;
+							////console.log('datelength: ' + dateLength);
 						}
-						if (firstDateColumnFound && !secondDateColumnFound) {
-							////console.log('vat');
+						////console.log('bitiyor');
+						////console.log(dateLength);
+					}
+					else {
+						//console.log('hereeeeee');
+						//For all the columns
+						////console.log('here important, printin out length of row: ' +table.tr[k].td.length );
+						for (k = 0; k < columnLength; k++) {
+
+							////console.log('column: ' + l);
+							////console.log('printing out column data: ' + JSON.stringify(table.tr[k].td));
+
+							columnData = table[j].childs[k];
+							//console.log('column data: ', columnData);
+							//if algorithmStart is true, than read the date from the rows,
+							//and store them in the dates array, if they are both filled and they
+							//are both Dates.
+							//Checking for two adjacent columns containing dates.
+							//If they are not adjacent, this is not an acceptable row 
+							//for the algorithm.
+							//Check the first column with a date in it.
 							//checking if date, if it is 
-							//set secondDateColumnFound, secondDateColumn
-							if (dateFound = checkColumnIfDate(columnData)) {
-								secondDateColumnFound = true;
-								secondDateColumn = k;
-								dates[0][1] = dateFound;
-								//stopping the search for two adjacent 
-								//date columns, because they are found.
-								algorithmStart = true;
-								////console.log('buraya da giriyor');
-							}
-						}
-					}//end of for all the columns
-				}//end of else
-			}//end of for all the rows
-			table = true;
-		}//end of if table
-		//since table is already found, no need to continue.
-		if (table) {
-			break;
-		}
+							//set firstDateColumnFound,firstDateRow,firsDateColumn
 
+
+							////console.log('printing out columndata: ' + JSON.stringify(columnData));
+
+							////console.log('buraya niye girmiyor?');
+
+							//!firstDateColumnFound is used for not entering the same condition again
+							if (!firstDateColumnFound) {
+								if (dateFound = checkColumnIfDate(columnData)) {
+									firstDateColumnFound = true;
+									//firstDateRow = j;
+									firstDateColumn = k;
+									//as long as the algorithmStart is not satisfied,
+									//it will be safe to overwrite the 0th element 
+									//of the date array.  When algorithmStart is satisfied,
+									//it won't enter to this block of code anymore.
+									dates[0] = [];
+									dates[0][0] = dateFound;
+									//continue is used so it doesn't enter the condition below.
+									continue;
+								}
+							}
+							if (firstDateColumnFound && !secondDateColumnFound) {
+								////console.log('vat');
+								//checking if date, if it is 
+								//set secondDateColumnFound, secondDateColumn
+								if (dateFound = checkColumnIfDate(columnData)) {
+									secondDateColumnFound = true;
+									secondDateColumn = k;
+									dates[0][1] = dateFound;
+									//stopping the search for two adjacent 
+									//date columns, because they are found.
+									algorithmStart = true;
+									////console.log('buraya da giriyor');
+								}
+							}
+						}//end of for all the columns
+					}//end of else
+				}//end of for all the rows
+				table = true;
+			}//end of if table
+			//since table is already found, no need to continue.
+			if (table) {
+				break;
+			}
+
+		}
 	}
+	catch(err) {
+		callback("There is a problem with the note you selected, please try again with another note", null);
+		return;
+	}
+	//});
 	//console.log('printing dates: ', JSON.stringify(dates));
-	return dates;
+callback(null, dates);
 }//end of processXML
 
 var checkColumnIfDate =  function (columnData) {

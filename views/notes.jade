@@ -3,22 +3,32 @@ extends layout
 block content
   h2 Select a Note:
 
-  #bar
-  mixin note_list(title)
-    option(value="#{title}") #{title}
+  mixin note_list(title, guid)
+    option(value="#{guid}") #{title}
 
+  -if (session.error)
+    h2 Error
+    p
+      =session.error
   
-  
-  select
-    +note_list("Select a value")
-    for note in returnedData
-      +note_list(note.title)
-        
+  form(action='/notes', method='POST')
+    select(name='select')
+      +note_list("Select a value", 0)
+      if session.notes
+        for note in session.notes
+          +note_list(note.title, note.guid)
+      else
+        for note in notes
+          +note_list(note.title, note.guid)
+    input.input(type='submit', name='action', value='submit')
+
+  #bar
+
 block scripts
-  script(src='/js/libs/highcharts.js')
-  script(type='text/javascript')
-    if(!{data}) {
-      $(function () {
+  if data
+    script(src='/js/libs/highcharts.js')
+    script(type='text/javascript')
+     $(function () {
         $(document).ready(function() {
         var chart = new Highcharts.Chart({
           chart: {
@@ -34,4 +44,3 @@ block scripts
         });
         });
       });
-    }

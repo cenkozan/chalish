@@ -38,6 +38,13 @@ app.get('/oauth', routes.oauth);
 app.get('/oauth_callback', routes.oauth_callback);
 app.get('/clear', routes.clear);
 
+app.post('/notes', function (req, res) {
+	if (req.session.error){
+		req.session.error = null;
+	}
+	routes.notes(req, res);
+});
+
 // Run
 http.createServer(app).listen(app.get('port'), function(){
   console.log("Express server listening on port " + app.get('port'));
