@@ -16,7 +16,10 @@
 		"moment": "*",
 		"phantomjs": "*",
 		"d3": "*",
-		"node-xml-lite": "*"
+		"node-xml-lite": "*",
+		"node-sass": "*",
+		"bcrypt": "*",
+		"mongoose": "*"
 	},
 	"devDependencies": {
 		"nodemon": "*",

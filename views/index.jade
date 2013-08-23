@@ -1,14 +1,37 @@
 extends layout
 
 block content
-  h1 Welcome to Chalish
-  h2 Creates Charts from the Tables you keep in 
-      a(href='http://www.evernote.com') Evernote.
-  p Watch the video below 
-  - if(session.error)
-    h2 Error
-    p
-      = session.error
-  h2 To Start 
-    a(href='/oauth') Login with Evernote
-
+  .wrapper
+    .header
+      .logo
+        h1
+          a(href='http://www.chalish.com')
+            img(src='images/rooney.png')
+      .right.button
+        a(href="/oauth") Login & Authorize with Evernote
+    .clearfix
+    .content
+      .move-up-when-checked
+        h1 Do you use Tables in your Evernote?
+        input(type="checkbox", name="Check") 
+        .move-left-when-checked
+          p Check
+        h1 Do you put Start & End Dates in them?
+        input(type="checkbox", name="Check") 
+        .move-left-when-checked
+          p Check
+        h1 Why not Chalish?
+        p It creates Charts from Dates in your Evernote Tables.
+  
+    .extra-content
+      p Watch the video below 
+      - if(session.error)
+        h2 Error
+      p
+          = session.error
+      h2 To Start 
+        a(href='/oauth') Login 
+        p with Evernote and Authorize Chalish to search tables in your Evernote!
+    
+    .footer
+      p Copyright

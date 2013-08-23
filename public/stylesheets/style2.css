@@ -1,0 +1,50 @@
+body {
+	padding: 0;
+  margin: 0;
+  font-family: "Kefa","Helvetica Neue", "Helvetica", Helvetica, Arial, sans-serif;
+}
+
+.wrapper {
+	margin: 0 auto;
+	width: 960px;
+}
+
+.move-up-when-checked {
+	position: fixed;
+	overflow: auto;
+  position: relative;
+	height: 100px;
+	background-color: red;
+}
+
+.header {
+	background-color: blue;
+	height: 100px;
+}
+
+.logo {
+	float: left;
+}
+
+.right {
+	float: right;
+	padding-top: 40px;
+}
+
+a {
+  color: #00B7FF;
+}
+
+.clearfix:before, .clearfix:after {
+	content: "\0020"; display: block; height: 0; visibility: hidden;
+}
+
+.clearfix:after {
+	clear: both;
+}
+
+/*fix clearfix: blueprintcss.lighouseapp.com/projects/15318/tickets/5-extra-margin-padding-bottom-of-page */
+
+.clearfix {
+	zoom: 1;
+}
