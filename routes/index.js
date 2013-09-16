@@ -1,28 +1,31 @@
-var Evernote = require('evernote').Evernote;
+var Evernote = require('evernote').Evernote,
+		config = require('../config.json'),
+		callbackUrl = "http://localhost:3000/oauth_callback",
+		childProcess = require('child_process'), 
+		phantomjs = require('phantomjs'),
+		utilityModule = require('./utilityModule.js'),
+		mongoose = require('mongoose'),
+    User = require('./user-model');
+//binPath = phantomjs.path;
 
-var config = require('../config.json');
-var callbackUrl = "http://localhost:3000/oauth_callback";
-
-//var fs = require('fs');
-var sys = require('sys');
-//var xml2js = require('xml2js');
-var childProcess = require('child_process');
-var phantomjs = require('phantomjs');
-var utilityModule = require('./utilityModule.js');
-//var binPath = phantomjs.path;
 // checking the notes for tables, dates
-
 exports.notes = function(req,res) {
 
-	var token = req.session.oauthAccessToken;
-	var client = new Evernote.Client({
-		token: token,
-			sandbox: config.SANDBOX});
-	var note_store = client.getNoteStore();
+	var token = req.session.oauthAccessToken, 
+			client = new Evernote.Client({
+				token: token,
+			sandbox: config.SANDBOX}),
+			note_store = client.getNoteStore(),
+			selectedGuid = req.body.select;
 
-	//console.log('req.body.select: ', req.body.select);
-	var selectedGuid = req.body.select;
 	console.log('selectedGuid: ', selectedGuid);
+	//console.log('req.body.select: ', req.body.select);
+
+	// If comming from the notes screen & a Note has been selected.
+	// In this case, note will have a table, and chalish will create
+	// chart from this table.
+	// If not, chalish will search the notes with the tables in them.
+	// Check the else statement below.
 	if(selectedGuid && selectedGuid != 0) {
 		var dates, numberOfWorksPerMounth,  monthNamesArray = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 		note_store.getNoteContent(token, selectedGuid, function(noteContent){
@@ -106,6 +109,11 @@ exports.notes = function(req,res) {
 
 }//end of exports.check
 
+// after login button pressed.
+// check the DB for the matching password.
+exports.login = function(req, res) {
+
+}
 
 // home page
 exports.index = function(req, res) {
@@ -122,27 +130,132 @@ exports.index = function(req, res) {
 
 // OAuth
 exports.oauth = function(req, res) {
-	var client = new Evernote.Client({
-		consumerKey: config.API_CONSUMER_KEY,
-			consumerSecret: config.API_CONSUMER_SECRET,
-			sandbox: config.SANDBOX
+	var connStr = "mongodb://localhost:27017/chalish-user-table",
+			newUser;
+
+
+	mongoose.connect(connStr, function(err) {
+		if (err) 
+			throw err;
+		console.log("Successfully connected to MongoDB");
 	});
 
-	client.getRequestToken(callbackUrl, function(error, oauthToken, oauthTokenSecret, results){
-		if(error) {
-			req.session.error = JSON.stringify(error);
-			res.redirect('/');
-		}
-		else { 
-			// store the tokens in the session
-			req.session.oauthToken = oauthToken;
-			req.session.oauthTokenSecret = oauthTokenSecret;
-
-			// redirect the user to authorize the token
-			res.redirect(client.getAuthorizeUrl(oauthToken));
-		}
+	// create a user a new user
+	newUser = new User({
+		email: req.body.email,
+		password: req.body.password,
+		oauthAccessToken: req.session.oauthAccessToken,
+		oauthAccessTokenSecret: req.session.oauthAccessTokenSecret,
+		edamShard: req.session.edamShard,
+		edamUserId: req.session.edamUserId,
+		edamExpires: req.session.edamExpires,
+		edamNoteStoreUrl: req.session.edamNoteStoreUrl,
+		edamWebApiUrlPrefix: req.session.edamWebApiUrlPrefix
 	});
+	
+	testUser = new User({
+		email: 'cok312345@ko.com',
+		password: 'Password123',
+		oauthAccessToken: 'a',
+		oauthAccessTokenSecret: 'a',
+		edamShard: 'a',
+		edamUserId: 'a',
+		edamExpires: 'a',
+		edamNoteStoreUrl: 'a',
+		edamWebApiUrlPrefix: 'a'
+	});
+
+
+	// save user to database
+	testUser.save(function(err) {
+		if (err) throw err;
+
+		// fetch user and test password verification
+		var kanka = new User();
+	User.findOne({ email: 'cok312345@ko.com' }, function(err, kanka) {
+			if (err) throw err;
+
+			console.log("user is: ", kanka);
+			// test a matching password
+			kanka.comparePassword('Password123', function(err, isMatch) {
+				//if (err) throw err;
+				console.log('Password123:', isMatch); // -&gt; Password123: true
+			});
+
+			// test a failing password
+			kanka.comparePassword('123Password', function(err, isMatch) {
+				//if (err) throw err;
+				console.log('123Password:', isMatch); // -&gt; 123Password: false
+			});
+		});
+
+	});
+
+	
+
+
 };
+
+//oauth callback calls to create a new user.
+exports.createUser = function(req,res) {
+	var connStr = "mongodb://localhost:27017/chalish-user-table",
+			newUser;
+
+
+	mongoose.connect(connStr, function(err) {
+		if (err) 
+			throw err;
+		console.log("Successfully connected to MongoDB");
+	});
+
+	// create a user a new user
+	newUser = new User({
+		email: req.body.email,
+		password: req.body.password,
+		oauthAccessToken: req.session.oauthAccessToken,
+		oauthAccessTokenSecret: req.session.oauthAccessTokenSecret,
+		edamShard: req.session.edamShard,
+		edamUserId: req.session.edamUserId,
+		edamExpires: req.session.edamExpires,
+		edamNoteStoreUrl: req.session.edamNoteStoreUrl,
+		edamWebApiUrlPrefix: req.session.edamWebApiUrlPrefix
+	});
+	
+	testUser = new User({
+		email: 'cok@ko.com',
+		password: 'Password123',
+		oauthAccessToken: ' ',
+		oauthAccessTokenSecret: ' ',
+		edamShard: ' ',
+		edamUserId: ' ',
+		edamExpires: ' ',
+		edamNoteStoreUrl: ' ',
+		edamWebApiUrlPrefix: ' '
+	});
+
+
+	// save user to database
+	testUser.save(function(err) {
+		if (err) throw err;
+
+		// fetch user and test password verification
+		User.findOne({ username: 'cok@ko.com' }, function(err, user) {
+			if (err) throw err;
+
+			// test a matching password
+			user.comparePassword('Password123', function(err, isMatch) {
+				if (err) throw err;
+				console.log('Password123:', isMatch); // -&gt; Password123: true
+			});
+
+			// test a failing password
+			user.comparePassword('123Password', function(err, isMatch) {
+				if (err) throw err;
+				console.log('123Password:', isMatch); // -&gt; 123Password: false
+			});
+		});
+	});
+}
 
 // OAuth callback
 exports.oauth_callback = function(req, res) {
@@ -164,16 +277,23 @@ exports.oauth_callback = function(req, res) {
 				} else {
 					// store the access token in the session
 					req.session.oauthAccessToken = oauthAccessToken;
-					req.session.oauthAccessTtokenSecret = oauthAccessTokenSecret;
+					req.session.oauthAccessTokenSecret = oauthAccessTokenSecret;
 					req.session.edamShard = results.edam_shard;
 					req.session.edamUserId = results.edam_userId;
 					req.session.edamExpires = results.edam_expires;
 					req.session.edamNoteStoreUrl = results.edam_noteStoreUrl;
 					req.session.edamWebApiUrlPrefix = results.edam_webApiUrlPrefix;
-					res.redirect('/');
+					// Since we have successfully authorized with Evernote,
+					// Let's ask the User his e-mail, and a password to create
+					// a user for him in Evernote.
+					// Have to create a new page for this.
+					res.redirect('/createUser');
+					//here we save the user in the DB before
+					//redirecting to the page.
+					res.redirect('/notes');
 				}
 			});
-};
+}
 
 // Clear session
 exports.clear = function(req, res) {

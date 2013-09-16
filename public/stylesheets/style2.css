@@ -14,11 +14,11 @@ body {
 	overflow: auto;
   position: relative;
 	height: 100px;
-	background-color: red;
+	background-color: white;
 }
 
 .header {
-	background-color: blue;
+	background-color: white;
 	height: 100px;
 }
 
@@ -26,9 +26,15 @@ body {
 	float: left;
 }
 
-.right {
+.right {	
 	float: right;
 	padding-top: 40px;
+}
+
+#loginboxes ul li {
+	float: left;
+	margin: 10px;
+	list-style: none;
 }
 
 a {

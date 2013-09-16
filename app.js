@@ -2,15 +2,7 @@
 var express = require('express'),
 		routes = require('./routes'),
 		http = require('http'),
-		mongoose = require('mongoose'),
 		path = require('path'),
-		Schema = mongoose.Schema,
-		bcrypt = require('bcrypt'),
-		SALT_WORK_FACTOR,
-		UserSchema = new Schema({
-			username: { type: String, required: true, index: { unique: true } },
-		password: { type: String, required: true }
-		}),
 		app = express();
 
 // Configurations
@@ -45,6 +37,8 @@ app.get('/notes', routes.notes);
 app.get('/oauth', routes.oauth);
 app.get('/oauth_callback', routes.oauth_callback);
 app.get('/clear', routes.clear);
+app.get('/login', routes.login);
+app.get('/createUser', routes.createUser);
 
 app.post('/notes', function (req, res) {
 	if (req.session.error){
@@ -55,5 +49,6 @@ app.post('/notes', function (req, res) {
 
 // Run
 http.createServer(app).listen(app.get('port'), function(){
+
 	console.log("Express server listening on port " + app.get('port'));
 });

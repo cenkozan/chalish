@@ -1,6 +1,9 @@
-extends layout
-
-block content
+doctype 5
+html
+  head
+    title Chalish
+    link(rel='stylesheet', href='/stylesheets/style.css')
+  body
   .wrapper
     .header
       .logo
@@ -21,11 +24,7 @@ block content
             li
               a(href='/login') Login
     .clearfix
-    .content
-      .move-up-when-checked
-        h1 Create Charts From Your Evernote Tables
-        .calltoaction
-          a(href='oauth') Sign Up with Evernote
-    .footer
+    block content
+		.footer
       p Copyright
-    script(src='/js/mainscreen.js')
+    block scripts

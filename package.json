@@ -18,8 +18,10 @@
 		"d3": "*",
 		"node-xml-lite": "*",
 		"node-sass": "*",
-		"bcrypt": "*",
-		"mongoose": "*"
+		"node-scrypt": "*",
+		"mongoose": "*",
+		"passport": "*",
+		"passport-local": "*"
 	},
 	"devDependencies": {
 		"nodemon": "*",
