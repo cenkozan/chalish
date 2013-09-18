@@ -5,6 +5,7 @@ var Evernote = require('evernote').Evernote,
 		phantomjs = require('phantomjs'),
 		utilityModule = require('./utilityModule.js'),
 		mongoose = require('mongoose'),
+		connStr = "mongodb://127.0.0.1:27017/chalish-user-table",
     User = require('./user-model');
 //binPath = phantomjs.path;
 
@@ -107,13 +108,68 @@ exports.notes = function(req,res) {
 		res.render('index');
 		});*/
 
-}//end of exports.check
+};//end of exports.check
 
 // after login button pressed.
 // check the DB for the matching password.
 exports.login = function(req, res) {
+	console.log('hier hier');
+	console.log(req.body.email);
 
-}
+	mongoose.connect(connStr, function(err) {
+		if (err) console.log(err);
+		else console.log("Successfully connected to MongoDB");
+	});
+
+
+		//testUser = new User({
+		//email: 'cok1@ko.com',
+		//password: 'Password123',
+		//oauthAccessToken: 'a',
+		//oauthAccessTokenSecret: 'a',
+		//edamShard: 'a',
+		//edamUserId: 'a',
+		//edamExpires: 'a',
+		//edamNoteStoreUrl: 'a',
+		//edamWebApiUrlPrefix: 'a'
+		//});
+
+	// save user to database
+	//testUser.save(function(err) {
+		//if (err) throw err;
+		//// fetch user and test password verification
+		//var kanka = new User();
+	User.findOne({ email: req.body.email }, function(err, user) {
+		console.log('gut gut');
+			if (err) console.log(err);
+
+			console.log('is user instance of User?: ', user instanceof User);
+			if (user instanceof User) {
+				user.comparePassword(req.body.password, function(err, isMatch) {
+					if (err) req.session.error = err;
+					console.log('User authenticated: ', user.email);
+					//we set the session info back here.
+					req.session.oauthAccessToken = user.oauthAccessToken;
+					mongoose.connection.close();
+					res.redirect('/');
+				});
+			}
+			else {
+				req.session.error = "couldnt find the user";
+				mongoose.connection.close();
+				res.redirect('/');
+			}
+			// test the entered password with the hash in the DB
+						//// test a failing password
+			//user.comparePassword('123Password', function(err, isMatch) {
+				////if (err) throw err;
+				//console.log('123Password:', isMatch); // -&gt; 123Password: false
+			//});
+		});
+	//});
+
+
+};
 
 // home page
 exports.index = function(req, res) {
@@ -122,6 +178,7 @@ exports.index = function(req, res) {
 		res.redirect('/notes');
 	} else {
 		console.log('connection not ready');
+		//req.session.error =  null;
 		res.render('index');
 		//res.redirect('notes');
 		//res.redirect('highcharts');
@@ -130,135 +187,33 @@ exports.index = function(req, res) {
 
 // OAuth
 exports.oauth = function(req, res) {
-	var connStr = "mongodb://localhost:27017/chalish-user-table",
-			newUser;
-
-
-	mongoose.connect(connStr, function(err) {
-		if (err) 
-			throw err;
-		console.log("Successfully connected to MongoDB");
+	console.log('hahahahaha');
+	var client = new Evernote.Client({
+		consumerKey: config.API_CONSUMER_KEY,
+		consumerSecret: config.API_CONSUMER_SECRET,
+		sandbox: config.SANDBOX
 	});
-
-	// create a user a new user
-	newUser = new User({
-		email: req.body.email,
-		password: req.body.password,
-		oauthAccessToken: req.session.oauthAccessToken,
-		oauthAccessTokenSecret: req.session.oauthAccessTokenSecret,
-		edamShard: req.session.edamShard,
-		edamUserId: req.session.edamUserId,
-		edamExpires: req.session.edamExpires,
-		edamNoteStoreUrl: req.session.edamNoteStoreUrl,
-		edamWebApiUrlPrefix: req.session.edamWebApiUrlPrefix
-	});
-	
-	testUser = new User({
-		email: 'cok312345@ko.com',
-		password: 'Password123',
-		oauthAccessToken: 'a',
-		oauthAccessTokenSecret: 'a',
-		edamShard: 'a',
-		edamUserId: 'a',
-		edamExpires: 'a',
-		edamNoteStoreUrl: 'a',
-		edamWebApiUrlPrefix: 'a'
-	});
-
-
-	// save user to database
-	testUser.save(function(err) {
-		if (err) throw err;
-
-		// fetch user and test password verification
-		var kanka = new User();
-	User.findOne({ email: 'cok312345@ko.com' }, function(err, kanka) {
-			if (err) throw err;
-
-			console.log("user is: ", kanka);
-			// test a matching password
-			kanka.comparePassword('Password123', function(err, isMatch) {
-				//if (err) throw err;
-				console.log('Password123:', isMatch); // -&gt; Password123: true
-			});
-
-			// test a failing password
-			kanka.comparePassword('123Password', function(err, isMatch) {
-				//if (err) throw err;
-				console.log('123Password:', isMatch); // -&gt; 123Password: false
-			});
-		});
-
-	});
-
-	
-
-
+	client.getRequestToken(callbackUrl, function(error, oauthToken, oauthTokenSecret, results){
+		if (error) {
+			console.log('what');
+			console.log(error);
+			req.session.error = JSON.stringify(error);
+			res.redirect('/');
+		}
+		else { 
+			// store the tokens in the session
+			req.session.oauthToken = oauthToken;
+			req.session.oauthTokenSecret = oauthTokenSecret;
+			// redirect the user to authorize the token
+			res.redirect(client.getAuthorizeUrl(oauthToken));
+		}
+	});	
 };
 
-//oauth callback calls to create a new user.
-exports.createUser = function(req,res) {
-	var connStr = "mongodb://localhost:27017/chalish-user-table",
-			newUser;
-
-
-	mongoose.connect(connStr, function(err) {
-		if (err) 
-			throw err;
-		console.log("Successfully connected to MongoDB");
-	});
-
-	// create a user a new user
-	newUser = new User({
-		email: req.body.email,
-		password: req.body.password,
-		oauthAccessToken: req.session.oauthAccessToken,
-		oauthAccessTokenSecret: req.session.oauthAccessTokenSecret,
-		edamShard: req.session.edamShard,
-		edamUserId: req.session.edamUserId,
-		edamExpires: req.session.edamExpires,
-		edamNoteStoreUrl: req.session.edamNoteStoreUrl,
-		edamWebApiUrlPrefix: req.session.edamWebApiUrlPrefix
-	});
-	
-	testUser = new User({
-		email: 'cok@ko.com',
-		password: 'Password123',
-		oauthAccessToken: ' ',
-		oauthAccessTokenSecret: ' ',
-		edamShard: ' ',
-		edamUserId: ' ',
-		edamExpires: ' ',
-		edamNoteStoreUrl: ' ',
-		edamWebApiUrlPrefix: ' '
-	});
-
-
-	// save user to database
-	testUser.save(function(err) {
-		if (err) throw err;
-
-		// fetch user and test password verification
-		User.findOne({ username: 'cok@ko.com' }, function(err, user) {
-			if (err) throw err;
-
-			// test a matching password
-			user.comparePassword('Password123', function(err, isMatch) {
-				if (err) throw err;
-				console.log('Password123:', isMatch); // -&gt; Password123: true
-			});
-
-			// test a failing password
-			user.comparePassword('123Password', function(err, isMatch) {
-				if (err) throw err;
-				console.log('123Password:', isMatch); // -&gt; 123Password: false
-			});
-		});
-	});
-}
 
 // OAuth callback
 exports.oauth_callback = function(req, res) {
+	console.log('hu?');
 	var client = new Evernote.Client({
 		consumerKey: config.API_CONSUMER_KEY,
 			consumerSecret: config.API_CONSUMER_SECRET,
@@ -287,13 +242,43 @@ exports.oauth_callback = function(req, res) {
 					// Let's ask the User his e-mail, and a password to create
 					// a user for him in Evernote.
 					// Have to create a new page for this.
-					res.redirect('/createUser');
-					//here we save the user in the DB before
-					//redirecting to the page.
-					res.redirect('/notes');
+					res.render('newUser');
 				}
 			});
 }
+
+//oauth callback calls to create a new user.
+exports.createUser = function(req,res) {
+
+	var newUser;
+
+
+	mongoose.connect(connStr, function(err) {
+		if (err) console.log(err);
+		else console.log("Successfully connected to MongoDB");
+	});
+
+	req.session.email = req.body.email;
+
+	// create a user a new user
+	newUser = new User({
+		email: req.session.email,
+		password: req.body.password,
+		oauthAccessToken: req.session.oauthAccessToken,
+		oauthAccessTokenSecret: req.session.oauthAccessTokenSecret,
+		edamShard: req.session.edamShard,
+		edamUserId: req.session.edamUserId,
+		edamExpires: req.session.edamExpires,
+		edamNoteStoreUrl: req.session.edamNoteStoreUrl,
+		edamWebApiUrlPrefix: req.session.edamWebApiUrlPrefix
+	});
+
+	newUser.save(function(err) {
+		if (err) console.log(err);
+		else	console.log('Account Creation Successful');
+	});
+	res.redirect('/notes');
+};
 
 // Clear session
 exports.clear = function(req, res) {

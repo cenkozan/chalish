@@ -1,31 +1,10 @@
-extends layout
+extends layoutwithlogin
 
 block content
-  .wrapper
-    .header
-      .logo
-        h1
-          a(href='http://www.chalish.com')
-            img(src='images/rooney.png')
-      .right
-        #loginboxes
-          ul
-            li 
-              p Username
-            li 
-              input(name='username')
-            li 
-              p Password
-            li 
-              input(name='password')
-            li
-              a(href='/login') Login
-    .clearfix
-    .content
-      .move-up-when-checked
-        h1 Create Charts From Your Evernote Tables
-        .calltoaction
-          a(href='oauth') Sign Up with Evernote
-    .footer
-      p Copyright
-    script(src='/js/mainscreen.js')
+	.content
+		.move-up-when-checked
+			h1 Create Charts From Your Evernote Tables
+		.calltoaction
+			a(href='oauth') Sign Up with Evernote
+block scripts
+	script(src='/js/mainscreen.js')

@@ -1,4 +1,4 @@
-extends layout
+extends layoutwithoutlogin
 
 block content
   h2 Select a Note:
@@ -28,7 +28,7 @@ block scripts
   if data
     script(src='http://code.jquery.com/jquery-latest.min.js')
     script(src='/js/libs/highcharts.js')
-    script(type='text/javascript')
+    script.
      $(function () {
         $(document).ready(function() {
         var chart = new Highcharts.Chart({

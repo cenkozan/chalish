@@ -19,6 +19,7 @@
 		"node-xml-lite": "*",
 		"node-sass": "*",
 		"node-scrypt": "*",
+		"bcrypt": "*",
 		"mongoose": "*",
 		"passport": "*",
 		"passport-local": "*"

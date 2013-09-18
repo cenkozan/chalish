@@ -15,15 +15,15 @@ app.configure(function(){
 	app.use(express.bodyParser());
 
 	app.use(express.methodOverride());
-	app.use(express.cookieParser('secret'));
-	app.use(express.session());
+	app.use(express.cookieParser());
+	app.use(express.session({secret: 'this is a secret'}));
 	app.use(function(req, res, next) {
 		res.locals.session = req.session;
 		next();
 	});
 
 	app.use(app.router);
-	app.use(require('less-middleware')({src: __dirname + '/public'}));
+	//app.use(require('less-middleware')({src: __dirname + '/public'}));
 	app.use(express.static(path.join(__dirname, 'public')));
 });
 
@@ -37,8 +37,24 @@ app.get('/notes', routes.notes);
 app.get('/oauth', routes.oauth);
 app.get('/oauth_callback', routes.oauth_callback);
 app.get('/clear', routes.clear);
-app.get('/login', routes.login);
-app.get('/createUser', routes.createUser);
+//app.get('/newUser', function (req, res) {
+	//res.render('newUser');
+//}
+
+app.post('/login', function (req, res) {
+	console.log('what the fuck');
+	if (req.session.error){
+		req.session.error = null;
+	}
+	routes.login(req, res);
+});
+
+app.post('/createUser', function (req, res) {
+	if (req.session.error){
+		req.session.error = null;
+	}
+	routes.createUser(req, res);
+});
 
 app.post('/notes', function (req, res) {
 	if (req.session.error){
@@ -49,6 +65,5 @@ app.post('/notes', function (req, res) {
 
 // Run
 http.createServer(app).listen(app.get('port'), function(){
-
 	console.log("Express server listening on port " + app.get('port'));
 });
