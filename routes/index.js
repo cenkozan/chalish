@@ -6,12 +6,19 @@ var Evernote = require('evernote').Evernote,
 		utilityModule = require('./utilityModule.js'),
 		mongoose = require('mongoose'),
 		connStr = "mongodb://127.0.0.1:27017/chalish-user-table",
-    User = require('./user-model');
+    User = require('./user-model'),
+		domain = require('domain').create();
 //binPath = phantomjs.path;
+
+domain.on('error', function(err){
+    // handle the error safely
+    console.log(err);
+});
 
 // checking the notes for tables, dates
 exports.notes = function(req,res) {
 
+	domain.run(function (){
 	var token = req.session.oauthAccessToken, 
 			client = new Evernote.Client({
 				token: token,
@@ -25,10 +32,8 @@ exports.notes = function(req,res) {
 	// If comming from the notes screen & a Note has been selected.
 	// In this case, note will have a table, and chalish will create
 	// chart from this table.
-	// If not, chalish will search the notes with the tables in them.
-	// Check the else statement below.
 	if(selectedGuid && selectedGuid != 0) {
-		var dates, numberOfWorksPerMounth,  monthNamesArray = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+		var dates, numberOfWorksPerMounth,  monthNamesArray = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'], sortFunction, dateA, dateB, previousYearsData;
 		note_store.getNoteContent(token, selectedGuid, function(noteContent){
 			//console.log(noteContent);
 			utilityModule.processXML(noteContent, function callback(err, dates) {
@@ -37,20 +42,22 @@ exports.notes = function(req,res) {
 					res.render('notes', {monthNamesArray: null, data: null});
 				}
 				else {
-					console.log('dates: ', dates);
+					//console.log('dates: ', dates);
 					if (dates.length == 0) {
 						req.session.error = 'We couldn\'t find any table in the note you selected, please try again with another note.';
 						res.render('notes', {monthNamesArray: null, data: null});
 					}
 					else {
-						var sortFunction = function (a,b){  
-							var dateA = new Date(a[0][0]).getTime();
-							var dateB = new Date(b[0][0]).getTime();
-							return dateA < dateB ? 1 : -1;  
+						sortFunction = function (a,b){  
+							return a[0].getTime() - b[0].getTime();  
 						}; 
 
 						dates.sort(sortFunction);
-						//console.log(JSON.stringify(dates));
+						console.log(JSON.stringify(dates));
+						
+						//We first extract previous years' data, get the average of those, send them 
+						//to the view too as another Axis.
+						previousYearsAverage = utilityModule.extractPreviousYearsAverage(dates); 
 						numberOfWorksPerMonth = utilityModule.monthsAndNumberOfWorksDone(dates, monthNamesArray, false);
 						console.log('numberof works done per month= ', JSON.stringify(numberOfWorksPerMonth));
 
@@ -61,6 +68,11 @@ exports.notes = function(req,res) {
 		});	
 
 	}
+	// If not, chalish will search the notes with the tables in them.
+	// Check the else statement below.
+	// September 18, 2013  /  Changing this.
+	// Notes will be automatically searched, ones with 
+	// tables will be in the select list.
 	else {
 
 		console.log('enters here');
@@ -107,7 +119,7 @@ exports.notes = function(req,res) {
 		req.session.notebooks = notebooks;
 		res.render('index');
 		});*/
-
+	});
 };//end of exports.check
 
 // after login button pressed.
@@ -149,6 +161,7 @@ exports.login = function(req, res) {
 					if (err) req.session.error = err;
 					console.log('User authenticated: ', user.email);
 					//we set the session info back here.
+					req.session.email = user.email;
 					req.session.oauthAccessToken = user.oauthAccessToken;
 					mongoose.connection.close();
 					res.redirect('/');
