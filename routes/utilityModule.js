@@ -2,87 +2,100 @@ var xmlsimple = require('xml-simple'),
 		xml2js = require('xml2js'),
 		moment = require('moment'),
 		fs = require('fs'),
-		nodexmllite = require('node-xml-lite'),
-		domain = require('domain').create();
+		nodexmllite = require('node-xml-lite');
 
-domain.on('error', function(err){
-    // handle the error safely
-    console.log(err);
-});
-
-//This should extract previous years' data, and return their average of work monthly. 
+//Extracts previous years' data, and return their average of work monthly. 
 // 1) Extract the dates that are different from this year.
 // 2) Divident = Number of works finished before this year
 // 3) DividedBy = The number of months passed since the first date in the array.
 var extractPreviousYearsAverage = function (dates, callback) {
-	domain.run(function (){
-	var previousYearsDates, thisYearsDates, divider, yearDifference, forEachLength = 0;
-	console.log('huloooooogggg!!!!');
-	console.log('dates.length: ', dates.length);
-	dates.forEach(function(element) {
-		forEachLength++;
-	});
-	console.log('foreachlength: ', forEachLength);
-	previousYearsDates = dates.filter(function (element, index, array) {
-		console.log(element[1].format('YYYY'));
-		return (element[1].format('YYYY') != moment().format('YYYY'));
-	});
-	thisYearsDates = dates.filter(function (element, index, array) {
-		console.log(element[1].format('YYYY'));
-		return (element[1].format('YYYY') == moment().format('YYYY'));
-	});
-	yearDifference = moment().format('YYYY') - dates[0][1].format('YYYY');
-	divider = yearDifference > 0 ? yearDifference * 12 + (12 - dates[0][1].format('M')) : 12 - dates[0][1].format('M');
-	return callback(previousYearData.length/divider, thisYearsDates);
-	});
+	//domain.run(function (){
+	try {
+		var previousYearsDates, thisYearsDates, divider, yearDifference, forEachLength = 0;
+		console.log('huloooooogggg!!!!');
+		console.log('dates.length: ', dates.length);
+		dates.forEach(function(element) {
+			forEachLength++;
+		});
+		console.log('foreachlength: ', forEachLength);
+		previousYearsDates = dates.filter(function (element, index, array) {
+			console.log(element.EndDate.format('YYYY'));
+			return (element.EndDate.format('YYYY') != moment().format('YYYY'));
+		});
+		thisYearsDates = dates.filter(function (element, index, array) {
+			console.log(element.EndDate.format('YYYY'));
+			return (element.EndDate.format('YYYY') == moment().format('YYYY'));
+		});
+		console.log(previousYearsDates.length);
+		console.log(thisYearsDates.length);
+		yearDifference = moment().format('YYYY') - dates[0].EndDate.format('YYYY');
+		divider = yearDifference > 0 ? yearDifference * 12 + (12 - dates[0].EndDate.format('M')) : 12 - dates[0][1].format('M');
+		return callback(null, previousYearsDates.length/divider, thisYearsDates);
+	} catch (e) {
+		return callback(e);
+	}
+	//});
 }
 
 //If Average is not true, returns the works done per month.
 //If Average is true, returns their average.
-var monthsAndNumberOfWorksDone = function (dates, monthNamesArray, average) {
+var monthsAndNumberOfWorksDone = function (dates, monthNamesArray) {
 	console.log('Entering months method, dates: ', JSON.stringify(dates));
-	var toReturn = new Array(12), average, numberOfDatePairs, i, j, k;
-
+	var toReturn = [];
+	for (var i=0; i <= 11; i++) {
+		toReturn[i] = 0;
+	}
 	/*toReturn[0][0] = monthNamesArray[0];
 		toReturn[0][1] = 0;*/
-	for(k = 11; k >= 0; k--){
-		toReturn[k] = 0;
-		//toReturn[k] = [];
-		//toReturn[k][0] = monthNamesArray[k];
-		//toReturn[k][1] = 0;
-	}	
+	//for(k = 11; k >= 0; k--){
+	//toReturn[k] = 0;
+	//toReturn[k] = [];
+	//toReturn[k][0] = monthNamesArray[k];
+	//toReturn[k][1] = 0;
+	//}	
 	numberOfDatePairs = dates.length;
 	console.log('number of date pairs: ', numberOfDatePairs);
-	for (i = 11; i >= 0; i--) {
-		for (j = numberOfDatePairs - 1; j >= 0; j--) {
-			//Here we take the ending date, we are calculating the 
-			//number of works for the ending dates; so [i][1].
-			//console.log('heyoo: ', dates[j][1]);
-			//console.log('month to be parsed:', monthNamesArray[i]);
-			//console.log('finish date of task: ', dates[j][1].format('MMM'));
-			if (dates[j][1].format('MMM') == monthNamesArray[i]) {
-				//console.log('yanimdaki kiz tas');
-				toReturn[i]++;
+	console.log(monthNamesArray[6]);
+	monthNamesArray.forEach(function (monthName, arraku) {
+		console.log(monthName);
+		console.log(arraku);
+		dates.forEach(function (datePair) {
+			console.log(datePair.EndDate.format('MMM'));
+			if (datePair.EndDate.format('MMM') == monthName) {
+				console.log('niye girmiyor');
+				console.log(arraku);
+				console.log(toReturn[arraku]);
+				toReturn[arraku]++;
+				console.log(toReturn[arraku]);
 			}
-		}
-	}
-	if (average) {
-		for (i = 11; i >= 0; i--) {
-			average += toReturn[i];
-			average = average/12;
-		}
-		console.log(JSON.stringify(average));
-		return average;
-	} else {
-		console.log(JSON.stringify(toReturn));
-		return toReturn;
-	}
+		});
+	});
+	//for (i = 11; i >= 0; i--) {
+	//for (j = numberOfDatePairs - 1; j >= 0; j--) {
+	//Here we take the ending date, we are calculating the 
+	//number of works for the ending dates; so [i][1].
+	//console.log('heyoo: ', dates[j][1]);
+	//console.log('month to be parsed:', monthNamesArray[i]);
+	//console.log('finish date of task: ', dates[j][1].format('MMM'));
+	//if (dates[j].EndDate.format('MMM') == monthNamesArray[i]) {
+	//console.log('yanimdaki kiz tas');
+	//toReturn[i]++;
+	//}
+	//}
+	//}
+	console.log(JSON.stringify(toReturn));
+	return toReturn;
+}
+
+var processXML2 = function (noteContent, callback) {
+	var parsed, dates = [];
 }
 
 var processXML = function (noteContent, callback) {
+
 	//console.log(noteContent);
 	//var parser = new xml2js.Parser();
-	//try {
+	try {
 		//console.log(parsed.childs.length);
 
 		//Variables to be used in algorithm.
@@ -94,14 +107,9 @@ var processXML = function (noteContent, callback) {
 				algorithmStart, dateColumn1, dateColumn2, dateFound, columnData, 
 				firstRowChilds, secondRowChilds, thirdRowChilds;
 
-		try {
 			parsed = nodexmllite.parseString(noteContent);
-		} catch (e) {
-			callback(e);
-		}
-		//end variables
 
-		//console.log('length: ', parsed.childs.length);
+		console.log('parsed length: ', parsed.childs.length);
 
 		//Going through the rows to look for a table.
 		//If there is a table, it's written in the name for 
@@ -109,7 +117,7 @@ var processXML = function (noteContent, callback) {
 		//parsed.childs
 		firstRowChilds = parsed.childs;
 		for(l = firstRowChilds.length - 1; l>= 0; l--) {
-			//console.log('First row childs: ', firstRowChilds);
+			console.log('First row childs: ', JSON.stringify(firstRowChilds));
 			secondRowChilds = firstRowChilds[l];
 			//console.log('secondRowsChilds row: ', l);
 			//console.log('secondRowsChilds: ', secondRowChilds);
@@ -119,11 +127,14 @@ var processXML = function (noteContent, callback) {
 			for (i = thirdRowChilds.length - 1; i >= 0; i--) {
 				//console.log('Going back to row 0 from: ', i);
 				//console.log('thirdRowChilds.childs[i]: ', thirdRowChilds[i]);
-				//if(thirdRowChilds[i].childs)
-				//console.log('thirdRowChilds[i].childs: ', thirdRowChilds[i].childs);
+				if(thirdRowChilds[i].childs)
+					console.log('thirdRowChilds length: ', thirdRowChilds[i].childs.length);
+					console.log('thirdRowChilds[i].childs: ', JSON.stringify(thirdRowChilds[i].childs));
 				//for(var j = parsed.childs[i].length
 
 				//Since table is found, we can use the table data to extract the dates,
+				if (thirdRowChilds[i].childs[0].name)
+					console.log('HIEYEYHFFFJ', thirdRowChilds[i].childs[0].name);
 				if(thirdRowChilds[i].childs && thirdRowChilds[i].childs[0].name == 'table') {
 					//console.log('there is a table');
 					//console.log(parsed.childs[i].childs[0].childs);
@@ -161,10 +172,12 @@ var processXML = function (noteContent, callback) {
 							if (dateColumn1 && dateColumn2) {
 								//since both are full, they are eligible for taking place
 								//in the graph, so add them to the Dates Array.
-								dates[++dateLength] = [];
-								dates[dateLength][0] = dateColumn1;
-								dates[dateLength][1] = dateColumn2;
-								console.log('datelength: ' + dateLength);
+								//dates[++dateLength] = [];
+								//dateLength++;
+								dates.push({StartDate: dateColumn1, EndDate: dateColumn2});
+								//dates[dateLength].StartDate = dateColumn1;
+								//dates[dateLength].EndDate = dateColumn2;
+								console.log('datelength: ' + dates.length);
 							}
 							////console.log('bitiyor');
 							////console.log(dateLength);
@@ -209,8 +222,16 @@ var processXML = function (noteContent, callback) {
 										//it will be safe to overwrite the 0th element 
 										//of the date array.  When algorithmStart is satisfied,
 										//it won't enter to this block of code anymore.
-										dates[0] = [];
-										dates[0][0] = dateFound;
+										//dates[0] = [];
+										//console.log('error atiyor');
+										//console.log(dates[0]);
+										dates[0] = {StartDate:dateFound, EndDate:null};
+										//try {
+										//dates[0].StartDate = dateFound;
+										//} catch (e) {
+										//console.log(e);
+										//}
+										////console.log('error atmiyior.');
 										//continue is used so it doesn't enter the condition below.
 										continue;
 									}
@@ -220,9 +241,14 @@ var processXML = function (noteContent, callback) {
 									//checking if date, if it is 
 									//set secondDateColumnFound, secondDateColumn
 									if (dateFound = checkColumnIfDate(columnData)) {
+										//console.log('2 error atiyor');
+										//console.log('2 error atmiyor');
 										secondDateColumnFound = true;
+										//console.log('2 error atmiyor');
 										secondDateColumn = k;
-										dates[0][1] = dateFound;
+										//console.log('2 error atmiyor');
+										dates[0].EndDate = dateFound;
+										//console.log('2 error atmiyor');
 										//stopping the search for two adjacent 
 										//date columns, because they are found.
 										algorithmStart = true;
@@ -241,17 +267,17 @@ var processXML = function (noteContent, callback) {
 
 			}//end of loop for i
 			if (table == true) {
-					break;
+				break;
 			}
 		}//end of loop for l
-	//}
-	//catch(err) {
-		//console.log(err.stack);
-		//return callback("There is a problem with the note you selected, please try again with another note", null);
-	//}
+		callback(null, dates);
+	}
+	catch(err) {
+		console.log(err.stack);
+		return callback("There is a problem with the note you selected, please try again with another note");
+	}
 	//});
 	//console.log('printing dates: ', JSON.stringify(dates));
-	callback(null, dates);
 }//end of processXML
 
 
@@ -302,7 +328,7 @@ var checkColumnIfDate =  function (columnData) {
 			dateFound = date;
 		}
 	}
-	
+
 	////console.log('Date Found: ', dateFound);
 	return dateFound;
 }

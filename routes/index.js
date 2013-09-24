@@ -1,30 +1,22 @@
-var Evernote = require('evernote').Evernote,
-		config = require('../config.json'),
-		callbackUrl = "http://localhost:3000/oauth_callback",
-		childProcess = require('child_process'), 
-		phantomjs = require('phantomjs'),
-		utilityModule = require('./utilityModule.js'),
-		mongoose = require('mongoose'),
-		connStr = "mongodb://127.0.0.1:27017/chalish-user-table",
-    User = require('./user-model'),
-		domain = require('domain').create();
+var Evernote = require('evernote').Evernote, config = require('../config.json'), callbackUrl = "http://localhost:3000/oauth_callback", childProcess = require('child_process'), phantomjs = require('phantomjs'), utilityModule = require('./utilityModule.js'), mongoose = require('mongoose'), connStr = "mongodb://127.0.0.1:27017/chalish-user-table", User = require('./user-model');
 //binPath = phantomjs.path;
-
-domain.on('error', function(err){
-    // handle the error safely
-    console.log(err);
-});
 
 // checking the notes for tables, dates
 exports.notes = function(req,res) {
 
-	domain.run(function (){
+	if (!req.session.oauthAccessToken)
+		return res.redirect('/');
+
 	var token = req.session.oauthAccessToken, 
 			client = new Evernote.Client({
 				token: token,
 			sandbox: config.SANDBOX}),
 			note_store = client.getNoteStore(),
-			selectedGuid = req.body.select;
+			selectedGuid = req.body.select, 
+			dates, 
+			monthNamesArray = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'], 
+			sortFunction,
+			numberOfWorksPerMonth;
 
 	console.log('selectedGuid: ', selectedGuid);
 	//console.log('req.body.select: ', req.body.select);
@@ -33,7 +25,6 @@ exports.notes = function(req,res) {
 	// In this case, note will have a table, and chalish will create
 	// chart from this table.
 	if(selectedGuid && selectedGuid != 0) {
-		var dates, numberOfWorksPerMounth,  monthNamesArray = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'], sortFunction, dateA, dateB, previousYearsData;
 		note_store.getNoteContent(token, selectedGuid, function(noteContent){
 			//console.log(noteContent);
 			utilityModule.processXML(noteContent, function callback(err, dates) {
@@ -49,19 +40,21 @@ exports.notes = function(req,res) {
 					}
 					else {
 						sortFunction = function (a,b){  
-							return a[0].getTime() - b[0].getTime();  
+							return a.StartDate.valueOf() - b.StartDate.valueOf();  
 						}; 
 
 						dates.sort(sortFunction);
-						console.log(JSON.stringify(dates));
-						
+						//console.log(JSON.stringify(dates));
 						//We first extract previous years' data, get the average of those, send them 
 						//to the view too as another Axis.
-						previousYearsAverage = utilityModule.extractPreviousYearsAverage(dates); 
-						numberOfWorksPerMonth = utilityModule.monthsAndNumberOfWorksDone(dates, monthNamesArray, false);
-						console.log('numberof works done per month= ', JSON.stringify(numberOfWorksPerMonth));
+						utilityModule.extractPreviousYearsAverage(dates, function callback(error, previousYearsAverage, thisYearsData) {
+							if(error) console.log(error.stack);
+							console.log(thisYearsData);
+							numberOfWorksPerMonth = utilityModule.monthsAndNumberOfWorksDone(thisYearsData, monthNamesArray);
+							console.log('numberof works done per month= ', JSON.stringify(numberOfWorksPerMonth));
 
-						res.render('notes', {monthNamesArray: JSON.stringify(monthNamesArray), data: JSON.stringify(numberOfWorksPerMonth)});
+							res.render('notes', {monthNamesArray: JSON.stringify(monthNamesArray), data: JSON.stringify(numberOfWorksPerMonth)});
+						}); 
 					}
 				}
 			});
@@ -119,7 +112,6 @@ exports.notes = function(req,res) {
 		req.session.notebooks = notebooks;
 		res.render('index');
 		});*/
-	});
 };//end of exports.check
 
 // after login button pressed.
@@ -134,51 +126,51 @@ exports.login = function(req, res) {
 	});
 
 
-		//testUser = new User({
-		//email: 'cok1@ko.com',
-		//password: 'Password123',
-		//oauthAccessToken: 'a',
-		//oauthAccessTokenSecret: 'a',
-		//edamShard: 'a',
-		//edamUserId: 'a',
-		//edamExpires: 'a',
-		//edamNoteStoreUrl: 'a',
-		//edamWebApiUrlPrefix: 'a'
-		//});
+	//testUser = new User({
+	//email: 'cok1@ko.com',
+	//password: 'Password123',
+	//oauthAccessToken: 'a',
+	//oauthAccessTokenSecret: 'a',
+	//edamShard: 'a',
+	//edamUserId: 'a',
+	//edamExpires: 'a',
+	//edamNoteStoreUrl: 'a',
+	//edamWebApiUrlPrefix: 'a'
+	//});
 
 	// save user to database
 	//testUser.save(function(err) {
-		//if (err) throw err;
-		//// fetch user and test password verification
-		//var kanka = new User();
+	//if (err) throw err;
+	//// fetch user and test password verification
+	//var kanka = new User();
 	User.findOne({ email: req.body.email }, function(err, user) {
 		console.log('gut gut');
-			if (err) console.log(err);
+		if (err) console.log(err);
 
-			console.log('is user instance of User?: ', user instanceof User);
-			if (user instanceof User) {
-				user.comparePassword(req.body.password, function(err, isMatch) {
-					if (err) req.session.error = err;
-					console.log('User authenticated: ', user.email);
-					//we set the session info back here.
-					req.session.email = user.email;
-					req.session.oauthAccessToken = user.oauthAccessToken;
-					mongoose.connection.close();
-					res.redirect('/');
-				});
-			}
-			else {
-				req.session.error = "couldnt find the user";
+		console.log('is user instance of User?: ', user instanceof User);
+		if (user instanceof User) {
+			user.comparePassword(req.body.password, function(err, isMatch) {
+				if (err) req.session.error = err;
+				console.log('User authenticated: ', user.email);
+				//we set the session info back here.
+				req.session.email = user.email;
+				req.session.oauthAccessToken = user.oauthAccessToken;
 				mongoose.connection.close();
 				res.redirect('/');
-			}
-			// test the entered password with the hash in the DB
-						//// test a failing password
-			//user.comparePassword('123Password', function(err, isMatch) {
-				////if (err) throw err;
-				//console.log('123Password:', isMatch); // -&gt; 123Password: false
-			//});
-		});
+			});
+		}
+		else {
+			req.session.error = "couldnt find the user";
+			mongoose.connection.close();
+			res.redirect('/');
+		}
+		// test the entered password with the hash in the DB
+		//// test a failing password
+		//user.comparePassword('123Password', function(err, isMatch) {
+		////if (err) throw err;
+		//console.log('123Password:', isMatch); // -&gt; 123Password: false
+		//});
+	});
 	//});
 
 
@@ -203,8 +195,8 @@ exports.oauth = function(req, res) {
 	console.log('hahahahaha');
 	var client = new Evernote.Client({
 		consumerKey: config.API_CONSUMER_KEY,
-		consumerSecret: config.API_CONSUMER_SECRET,
-		sandbox: config.SANDBOX
+			consumerSecret: config.API_CONSUMER_SECRET,
+			sandbox: config.SANDBOX
 	});
 	client.getRequestToken(callbackUrl, function(error, oauthToken, oauthTokenSecret, results){
 		if (error) {
@@ -276,14 +268,14 @@ exports.createUser = function(req,res) {
 	// create a user a new user
 	newUser = new User({
 		email: req.session.email,
-		password: req.body.password,
-		oauthAccessToken: req.session.oauthAccessToken,
-		oauthAccessTokenSecret: req.session.oauthAccessTokenSecret,
-		edamShard: req.session.edamShard,
-		edamUserId: req.session.edamUserId,
-		edamExpires: req.session.edamExpires,
-		edamNoteStoreUrl: req.session.edamNoteStoreUrl,
-		edamWebApiUrlPrefix: req.session.edamWebApiUrlPrefix
+					password: req.body.password,
+					oauthAccessToken: req.session.oauthAccessToken,
+					oauthAccessTokenSecret: req.session.oauthAccessTokenSecret,
+					edamShard: req.session.edamShard,
+					edamUserId: req.session.edamUserId,
+					edamExpires: req.session.edamExpires,
+					edamNoteStoreUrl: req.session.edamNoteStoreUrl,
+					edamWebApiUrlPrefix: req.session.edamWebApiUrlPrefix
 	});
 
 	newUser.save(function(err) {
