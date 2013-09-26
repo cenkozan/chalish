@@ -24,7 +24,6 @@ body {
 
 .logo {
 	float: left;
-	padding-top: 40px;
 }
 
 .right {	
@@ -32,12 +31,17 @@ body {
 	padding-top: 40px;
 }
 
-.right form ul li {
+#loginboxes ul li {
 	float: left;
 	margin: 10px;
 	list-style: none;
 }
 
+#bar {
+  min-width: 400px;
+  height: 400px;
+  margin: 0 auto;
+}
 a {
   color: #00B7FF;
 }

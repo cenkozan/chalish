@@ -37,6 +37,11 @@ body {
 	list-style: none;
 }
 
+#bar {
+  min-width: 400px;
+  height: 400px;
+  margin: 0 auto;
+}
 a {
   color: #00B7FF;
 }

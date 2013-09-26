@@ -12,35 +12,55 @@ var extractPreviousYearsAverage = function (dates, callback) {
 	//domain.run(function (){
 	try {
 		var previousYearsDates, thisYearsDates, divider, yearDifference, forEachLength = 0;
-		console.log('huloooooogggg!!!!');
-		console.log('dates.length: ', dates.length);
+		//console.log('huloooooogggg!!!!');
+		//console.log('dates.length: ', dates.length);
 		dates.forEach(function(element) {
 			forEachLength++;
 		});
-		console.log('foreachlength: ', forEachLength);
+		//console.log('foreachlength: ', forEachLength);
 		previousYearsDates = dates.filter(function (element, index, array) {
-			console.log(element.EndDate.format('YYYY'));
+			//console.log(element.EndDate.format('YYYY'));
 			return (element.EndDate.format('YYYY') != moment().format('YYYY'));
 		});
 		thisYearsDates = dates.filter(function (element, index, array) {
-			console.log(element.EndDate.format('YYYY'));
+			//console.log(element.EndDate.format('YYYY'));
 			return (element.EndDate.format('YYYY') == moment().format('YYYY'));
 		});
-		console.log(previousYearsDates.length);
-		console.log(thisYearsDates.length);
+		//console.log(previousYearsDates.length);
+		//console.log(thisYearsDates.length);
 		yearDifference = moment().format('YYYY') - dates[0].EndDate.format('YYYY');
+    console.log('yearDifference: ', yearDifference);
 		divider = yearDifference > 0 ? yearDifference * 12 + (12 - dates[0].EndDate.format('M')) : 12 - dates[0].EndDate.format('M');
-		return callback(null, previousYearsDates.length/divider, thisYearsDates);
+    console.log('divider: ',divider);
+    console.log('previousYearsDates.length: ', previousYearsDates.length);
+    console.log('previousYearsDates.length/divider: ', Math.floor(previousYearsDates.length/divider));
+		return callback(null, Math.floor(previousYearsDates.length/divider), thisYearsDates);
 	} catch (e) {
 		return callback(e);
 	}
 	//});
 }
 
+//This method is called with the previous years' average and 
+//this years work data.  Initial element of the returned array
+//will be the previous years' average. With every month data,
+//average will be recalculated, and pushed into the array that
+//will be returned.
+var calculateAverages = function (previousYearsAverage, thisYearsData) {
+  var toReturn = [];
+  //toReturn.push(previousYearsAverage);
+  //console.log('previousYearsAverage: ', previousYearsAverage);
+  thisYearsData.forEach(function (element) {
+    //console.log('element: ', element);
+    toReturn.push(Math.floor((previousYearsAverage + element)/2));
+  });
+  return toReturn;
+}
+
 //If Average is not true, returns the works done per month.
 //If Average is true, returns their average.
 var monthsAndNumberOfWorksDone = function (dates, monthNamesArray) {
-	console.log('Entering months method, dates: ', JSON.stringify(dates));
+	//console.log('Entering months method, dates: ', JSON.stringify(dates));
 	var toReturn = [];
 	for (var i=0; i <= 11; i++) {
 		toReturn[i] = 0;
@@ -54,19 +74,19 @@ var monthsAndNumberOfWorksDone = function (dates, monthNamesArray) {
 	//toReturn[k][1] = 0;
 	//}	
 	numberOfDatePairs = dates.length;
-	console.log('number of date pairs: ', numberOfDatePairs);
-	console.log(monthNamesArray[6]);
+	//console.log('number of date pairs: ', numberOfDatePairs);
+	//console.log(monthNamesArray[6]);
 	monthNamesArray.forEach(function (monthName, arraku) {
-		console.log(monthName);
-		console.log(arraku);
+		//console.log(monthName);
+		//console.log(arraku);
 		dates.forEach(function (datePair) {
-			console.log(datePair.EndDate.format('MMM'));
+			//console.log(datePair.EndDate.format('MMM'));
 			if (datePair.EndDate.format('MMM') == monthName) {
-				console.log('niye girmiyor');
-				console.log(arraku);
-				console.log(toReturn[arraku]);
+				//console.log('niye girmiyor');
+				//console.log(arraku);
+				//console.log(toReturn[arraku]);
 				toReturn[arraku]++;
-				console.log(toReturn[arraku]);
+				//console.log(toReturn[arraku]);
 			}
 		});
 	});
@@ -83,7 +103,7 @@ var monthsAndNumberOfWorksDone = function (dates, monthNamesArray) {
 	//}
 	//}
 	//}
-	console.log(JSON.stringify(toReturn));
+	//console.log(JSON.stringify(toReturn));
 	return toReturn;
 }
 
@@ -123,8 +143,8 @@ var processXML2 = function (noteContent, callback) {
 					firstDateColumnFound = false;
 					//For each Column in the Table
 					row.childs.every(function (columnData, index) {
-						console.log('\n');
-						console.log('columndData: ', JSON.stringify(columnData));
+						//console.log('\n');
+						//console.log('columndData: ', JSON.stringify(columnData));
 						if (!firstDateColumnFound) {
 							if (dateFound = checkColumnIfDate2(columnData)) {
 								firstDateColumnFound = true;
@@ -187,15 +207,15 @@ var processXML2 = function (noteContent, callback) {
 var checkColumnIfDate2 = function (columnData) {
 	var checkIfDate;
 	function findTheLastChild(element) {
-		console.log('element: ', element);
+		//console.log('element: ', element);
 		if (!element.childs)
 			return element;
 		else
 			return findTheLastChild(element.childs[0]);
 	}
 	checkIfDate = findTheLastChild(columnData);
-	console.log('here it is: ', checkIfDate);
-	console.log('type of data: ', typeof checkIfDate);
+	//console.log('here it is: ', checkIfDate);
+	//console.log('type of data: ', typeof checkIfDate);
 	return returnIfDate(checkIfDate);
 }
 
@@ -205,7 +225,7 @@ var returnIfDate = function (check) {
 		var date = moment(check.trim());
 		//console.log('printing moment date:', date);
 		if (date && date.isValid()) {
-			console.log('alla alla: ', date);
+			//console.log('alla alla: ', date);
 			return date;
 		}
 		else {
@@ -531,3 +551,4 @@ module.exports.processXML = processXML;
 module.exports.processXML2 = processXML2;
 module.exports.extractPreviousYearsAverage = extractPreviousYearsAverage;
 module.exports.monthsAndNumberOfWorksDone = monthsAndNumberOfWorksDone;
+module.exports.calculateAverages = calculateAverages;
