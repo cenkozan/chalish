@@ -29,20 +29,23 @@ block scripts
     script(src='http://code.jquery.com/jquery-latest.min.js')
     script(src='/js/libs/highcharts.js')
     script.
-     $(function () {
-        $(document).ready(function() {
+      $(document).ready(function() {
         var chart = new Highcharts.Chart({
           chart: {
-            renderTo: 'bar',
-            type: 'column'
+            zoomType: 'xy'
+            type: 'column',
           },
           title: {
-            text: 'Dates'
+            text: 'Work Done Per Month'
           },
           xAxis: {
-            categories: !{monthNamesArray}},
-          series: [{name: 'Dates', data:!{data}}]
-        });
+            categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+          },
+          series: [{
+            name: 'Number of Works Done',
+            color: '#4572A7',
+            data:['1', '1','1', '1', '1', '1', '1', '1', '1', '1', '1', '1' ]
+            }]
         });
       });
   else

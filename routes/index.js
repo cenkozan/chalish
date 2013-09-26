@@ -27,22 +27,15 @@ exports.notes = function(req,res) {
 	if(selectedGuid && selectedGuid != 0) {
 		note_store.getNoteContent(token, selectedGuid, function(noteContent){
 			//console.log(noteContent);
-			utilityModule.processXML(noteContent, function callback(err, dates) {
+			utilityModule.processXML2(noteContent, function callback(err, dates) {
 				if (err){
 					req.session.error = err;
 					res.render('notes', {monthNamesArray: null, data: null});
 				}
 				else {
-					//console.log('dates: ', dates);
-					if (dates.length == 0) {
-						req.session.error = 'We couldn\'t find any table in the note you selected, please try again with another note.';
-						res.render('notes', {monthNamesArray: null, data: null});
-					}
-					else {
 						sortFunction = function (a,b){  
 							return a.StartDate.valueOf() - b.StartDate.valueOf();  
 						}; 
-
 						dates.sort(sortFunction);
 						//console.log(JSON.stringify(dates));
 						//We first extract previous years' data, get the average of those, send them 
@@ -55,7 +48,6 @@ exports.notes = function(req,res) {
 
 							res.render('notes', {monthNamesArray: JSON.stringify(monthNamesArray), data: JSON.stringify(numberOfWorksPerMonth)});
 						}); 
-					}
 				}
 			});
 		});	

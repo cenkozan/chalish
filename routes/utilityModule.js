@@ -29,7 +29,7 @@ var extractPreviousYearsAverage = function (dates, callback) {
 		console.log(previousYearsDates.length);
 		console.log(thisYearsDates.length);
 		yearDifference = moment().format('YYYY') - dates[0].EndDate.format('YYYY');
-		divider = yearDifference > 0 ? yearDifference * 12 + (12 - dates[0].EndDate.format('M')) : 12 - dates[0][1].format('M');
+		divider = yearDifference > 0 ? yearDifference * 12 + (12 - dates[0].EndDate.format('M')) : 12 - dates[0].EndDate.format('M');
 		return callback(null, previousYearsDates.length/divider, thisYearsDates);
 	} catch (e) {
 		return callback(e);
@@ -88,7 +88,133 @@ var monthsAndNumberOfWorksDone = function (dates, monthNamesArray) {
 }
 
 var processXML2 = function (noteContent, callback) {
-	var parsed, dates = [];
+	try {
+		var parsed, dates = [], table, firstDateColumn, secondDateColumn, firstDateColumnFound = false, secondDateColumnFound = false, algorithmStart; 
+		parsed = nodexmllite.parseString(noteContent);
+		//console.log(parsed);
+		function checkEveryChild(data) {
+			//console.log(data.name);
+			//console.log(data.childs);
+			if (data.name == 'table') {
+				table = data;
+			}
+			else if (data.childs) {
+				data.childs.forEach(function (element) {
+					checkEveryChild(element);
+				});
+			}
+		}
+		checkEveryChild(parsed);
+		//console.log('dates', table);
+		//Table is found.  Check every column of the table for 
+		//two adjacent date columns.
+		if (table) {
+			//For each Row in the Table
+			table.childs.forEach(function (row, index) {
+				// Checking if the table has less than 2 columns.  2 columns are needed. 
+				// One is the Date Start, other is Date End Column.
+				if (row.childs.length < 2) {
+					throw new Error("There are not enough number of columns.  Chalish requires at least 2 rows, and columns containing a start date, and an end date");
+				}
+				// AlgorithmStart checks if two adjacent Date columns are found in the table.
+				// If there are, then no need to check again, move on to updating dates array
+				// from the Date Start and Date End Columns.
+				if (!algorithmStart) {
+					firstDateColumnFound = false;
+					//For each Column in the Table
+					row.childs.every(function (columnData, index) {
+						console.log('\n');
+						console.log('columndData: ', JSON.stringify(columnData));
+						if (!firstDateColumnFound) {
+							if (dateFound = checkColumnIfDate2(columnData)) {
+								firstDateColumnFound = true;
+								firstDateColumn = index;
+								//as long as the algorithmStart is not satisfied,
+								//it will be safe to overwrite the 0th element 
+								//of the date array.  When algorithmStart is satisfied,
+								//it won't enter to this block of code anymore.
+								dates[0] = {StartDate:dateFound, EndDate:null};
+								return true;
+							}
+						}
+						if (firstDateColumnFound && !secondDateColumnFound) {
+							//checking if date, if it is 
+							//set secondDateColumnFound, secondDateColumn
+							if (dateFound = checkColumnIfDate2(columnData)) {
+								secondDateColumnFound = true;
+								secondDateColumn = index;
+								dates[0].EndDate = dateFound;
+								//stopping the search for two adjacent 
+								//date columns, because they are found.
+								algorithmStart = true;
+								return false;
+							}
+						}
+						return true;
+					}); //end of for every child in table to to check if 
+					//two adjacent columns
+				} // end of if (! algorithm start)
+				// We have found two adjacent Date Columns.
+				// We know their column numbers.
+				// From now on, we will check if the following rows
+				// have date columns too, and will add them to the 
+				// date array if so
+				else {
+					dateColumn1 = checkColumnIfDate(row.childs[firstDateColumn]);
+					//console.log('dateColumn1: ' + JSON.stringify(dateColumn1));
+					dateColumn2 = checkColumnIfDate(row.childs[secondDateColumn]);
+					//console.log('dateColumn2: ' + JSON.stringify(dateColumn2));
+					if (dateColumn1 && dateColumn2) {
+						//since both are full, they are eligible for taking place
+						//in the graph, so add them to the Dates Array.
+						dates.push({StartDate: dateColumn1, EndDate: dateColumn2});
+					}
+
+				} //end of else (algorithmStart)
+			}); //end of forEach row in table
+			console.log(JSON.stringify(dates));
+			callback(null, dates);
+		}//end of if table
+		else {
+			throw new Error("There is no table in the note you have selected, please try again with another note.");
+		}
+	} catch (e) {
+		callback(e);
+	}
+}
+
+
+var checkColumnIfDate2 = function (columnData) {
+	var checkIfDate;
+	function findTheLastChild(element) {
+		console.log('element: ', element);
+		if (!element.childs)
+			return element;
+		else
+			return findTheLastChild(element.childs[0]);
+	}
+	checkIfDate = findTheLastChild(columnData);
+	console.log('here it is: ', checkIfDate);
+	console.log('type of data: ', typeof checkIfDate);
+	return returnIfDate(checkIfDate);
+}
+
+var returnIfDate = function (check) {
+	if (typeof check === 'string') {
+		//var date = moment(check.trim(), ["m/d/yy", "mmm d yyyy", "mmmm d, yyyy", "dddd, mmmm d, yyyy"]);
+		var date = moment(check.trim());
+		//console.log('printing moment date:', date);
+		if (date && date.isValid()) {
+			console.log('alla alla: ', date);
+			return date;
+		}
+		else {
+			return null;
+		}
+	}
+	else {
+		return null;
+	}
 }
 
 var processXML = function (noteContent, callback) {
@@ -107,7 +233,7 @@ var processXML = function (noteContent, callback) {
 				algorithmStart, dateColumn1, dateColumn2, dateFound, columnData, 
 				firstRowChilds, secondRowChilds, thirdRowChilds;
 
-			parsed = nodexmllite.parseString(noteContent);
+		parsed = nodexmllite.parseString(noteContent);
 
 		console.log('parsed length: ', parsed.childs.length);
 
@@ -129,7 +255,7 @@ var processXML = function (noteContent, callback) {
 				//console.log('thirdRowChilds.childs[i]: ', thirdRowChilds[i]);
 				if(thirdRowChilds[i].childs)
 					console.log('thirdRowChilds length: ', thirdRowChilds[i].childs.length);
-					console.log('thirdRowChilds[i].childs: ', JSON.stringify(thirdRowChilds[i].childs));
+				console.log('thirdRowChilds[i].childs: ', JSON.stringify(thirdRowChilds[i].childs));
 				//for(var j = parsed.childs[i].length
 
 				//Since table is found, we can use the table data to extract the dates,
@@ -280,9 +406,6 @@ var processXML = function (noteContent, callback) {
 	//console.log('printing dates: ', JSON.stringify(dates));
 }//end of processXML
 
-
-
-
 var checkColumnIfDate =  function (columnData) {
 	//Data can be found in two ways in the table.
 	// 1)columnData.span['\#'] 2)columnData['\#']
@@ -331,21 +454,6 @@ var checkColumnIfDate =  function (columnData) {
 
 	////console.log('Date Found: ', dateFound);
 	return dateFound;
-}
-
-var returnIfDate = function (check) {
-	//console.log('entering');
-	console.log('check: ', check);
-	//var date = moment(check.trim(), ["m/d/yy", "mmm d yyyy", "mmmm d, yyyy", "dddd, mmmm d, yyyy"]);
-	var date = moment(check.trim());
-	console.log('printing moment date:', date);
-	if (date.isValid()) {
-		console.log('alla alla: ', date);
-		return date;
-	}
-	else {
-		return null;
-	}
 }
 
 //console.log(JSON.stringify(parsed));
@@ -420,5 +528,6 @@ else {*/
 
 
 module.exports.processXML = processXML;
+module.exports.processXML2 = processXML2;
 module.exports.extractPreviousYearsAverage = extractPreviousYearsAverage;
 module.exports.monthsAndNumberOfWorksDone = monthsAndNumberOfWorksDone;
