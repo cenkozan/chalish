@@ -1,10 +1,25 @@
-extends layoutwithlogin
+extends layout
 
 block content
-	.content
-		.move-up-when-checked
-			h1 Create Charts From Your Evernote Tables
-		.calltoaction
-			a(href='oauth') Sign Up with Evernote
+  .content.section
+    h1 CREATE CHARTS FROM YOUR EVERNOTE TABLES
+    .calltoaction
+      p Sign Up with 
+        a(href='oauth') Evernote
+    h2 HOW DOES IT WORK?
+    p To have a Monthly Performance Chart, create a table with at least 3 columns. One for the name of the item, 2 for Start & End Dates
+    p Chalish will check your note for Tables. If they have two consecutive Dates, it will create a chart.
+    h2 WHAT CAN YOU USE IT FOR?
+    p How many Books you have read monthly?
+    p Your Daily tasks?
+    p Number of items your Factory has produced?
+    p Your Weight?
+    p It's for you to decide.
+    h1 Go Premium and ask us for more types of Charts.
+    p Premium users will also get to update the bottom of their notes with charts automatically.
+    p Only 34$ A Year!
+    p Go Premium!
+    p Contact us if you have questions and/or suggestions!
+    p Note: There is only one person who has worked in this product, and he is broke. You can also help him by donation.
 block scripts
-	script(src='/js/mainscreen.js')
+  script(src='/js/mainscreen.js')

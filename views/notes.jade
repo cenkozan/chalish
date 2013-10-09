@@ -1,29 +1,30 @@
-extends layoutwithoutlogin
+extends layout
 
 block content
-  h2 Select a Note:
-
-  mixin note_list(title, guid)
-    option(value="#{guid}") #{title}
-
-  -if (session.error)
-    h2 Error
-    p
-      =session.error
+  .content.section
+    h2 Select a Note:
   
-  form(action='/notes', method='POST')
-    select(name='select')
-      +note_list("Select a value", 0)
-      if session.notes
-        for note in session.notes
-          +note_list(note.title, note.guid)
-      else
-        for note in notes
-          +note_list(note.title, note.guid)
-    input.input(type='submit', name='action', value='submit')
-
-  #bar
-
+    mixin note_list(title, guid)
+      option(value="#{guid}") #{title}
+  
+    -if (session.error)
+      h2 Error
+      p
+        =session.error
+    
+    form(action='/notes', method='POST')
+      select(name='select')
+        +note_list("Select a value", 0)
+        if session.notes
+          for note in session.notes
+            +note_list(note.title, note.guid)
+        else
+          for note in notes
+            +note_list(note.title, note.guid)
+      input.input(type='submit', name='action', value='submit')
+  
+    #bar
+  
 block scripts
   if workData
     script(src='http://code.jquery.com/jquery-latest.min.js')
@@ -78,7 +79,7 @@ block scripts
               color: '#4572A7',
               type: 'column',
               data:!{workData}
-             },{
+              },{
               name: 'Average',
               type: 'spline',
               color: '#AA4643',
