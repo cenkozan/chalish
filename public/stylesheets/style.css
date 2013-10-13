@@ -96,7 +96,7 @@ p {
 
 .right {
 	float: right;
-	margin-top: 3%;
+	margin-top: 1%;
 	margin-right: 1%;
 }
 
@@ -115,9 +115,13 @@ p {
 	width: 90%;
 }
 
-.content > h1,h2 {
+.content.section > h1, .content.section > h2{
 	text-align: center;
 	text-transform: uppercase;
+}
+
+.content.section > p {
+	text-align: center;
 }
 
 .calltoaction {
