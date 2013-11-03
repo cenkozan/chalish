@@ -6,20 +6,20 @@ html
     link(href='http://fonts.googleapis.com/css?family=Condiment', rel='stylesheet', type='text/css')
     link(rel='stylesheet', href='/stylesheets/style.css')
   body
-    link(rel="shortcut icon", href="/images/chalish-logo.png") 
+    link(rel="shortcut icon", href="/images/favicon.ico") 
     .wrapper
       .header.section
         .logo
           img(src='images/chalish-logo.svg')
         -if (session.email)
           .right
-            p Username
+            p Username: 
               =session.email
             a(href='/clear') Logout
         -else
           .right
             form(action='/login', method='POST')
-              p email
+              p e-mail
               input(name='email')
               p Password
               input(type='password', name='password')
@@ -31,7 +31,6 @@ html
                 =session.error
 
       block content
-      .footer.section
-        a(href='#') Link To Developer. Go Premium
+      block footer
       block scripts
 

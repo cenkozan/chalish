@@ -2,33 +2,37 @@ extends layout
 
 block content
   .content.section
-    h1 Create charts from your evernote tables
-    .calltoaction
-      p Sign Up with 
-        a(href='oauth') Evernote
-    h2 How does it work?
-    .figure.left
-    p To have a Monthly Performance Chart, create a table with at least 3 columns. One for the name of the item, 2 for Start & End Dates
-    p Chalish will check your note for Tables. If they have two consecutive Dates, it will create a Monthly Performance chart.
-    h2 What can you use it for?
-    p How many Books you have read monthly?
-    p Your Daily tasks?
-    p Number of items your Factory has produced?
-    p Your Weight?
-    p It's Yours to decide.
-    h2 The most important part.  Why should you use it?
-    p We are not offering you another Evernote extension. 
-    p We are offering you a way to live.
-    p In this era of constant information, we need to remember to keep to our duties.
-    p What Chalish asks that you log your business or your daily life in an unobtrusive way.
-    p So that you can use Chalish for Positive Motivation. 
-    p At least, that's what we do. But then again,
-    p It's Yours to decide.
-    h1 Go Premium and ask for more types of Charts.
-    p Apart from backing up your favorite Evernote Extension, Premium users will also get to update the bottom of their notes with charts automatically.
-    p Only 24$ A Year!
-    p Go Premium!
-    p Contact us if you have questions and/or suggestions!
-    p Note: There is only one person who has worked in this product, and he is currently broke. You can also help him by donation.
+    h1 Create charts from evernote tables
+    p 
+      |Sign Up with 
+      a(href='oauth') Evernote
+    h2 What can you use it for? 
+    p
+      a(href='/images/Books_Read.png') The Books
+      |  you read?
+    p 
+      a(href='/images/Ongoing_Tasks.png') Your To-Do
+      |  lists?
+    h2 Why Chalish?
+    p We are offering you another motivativing use for Evernote.
+    p We are asking you to use tools that are already in Evernote.
+    h2 Upcoming Features:
+    ul.section
+      li 
+        p Automated updating of notes with Charts without visiting Chalish.
+      li
+        p Number Charts, Daily Time Charts
+      li
+        p Clash your performance with other Chalish users.
+      li
+        p Chalish Robot warning you about your performance.
+    h3 
+      a(href='#') Contact us
+      |  for questions & suggestions.
+  .showwidth
+block footer
+  .footer.section
+    p Copyright, 2013, 2gd AS
+    p Time is a poker player that never cheats, and always wins.
 block scripts
   script(src='/js/mainscreen.js')

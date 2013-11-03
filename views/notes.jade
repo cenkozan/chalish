@@ -14,7 +14,7 @@ block content
     
     form(action='/notes', method='POST')
       select(name='select')
-        +note_list("Select a value", 0)
+        +note_list("Selection", 0)
         if session.notes
           for note in session.notes
             +note_list(note.title, note.guid)
