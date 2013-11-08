@@ -42,7 +42,7 @@ app.get('/clear', routes.clear);
 //}
 
 app.post('/login', function (req, res) {
-	console.log('what the fuck');
+	console.log('what the heck');
 	if (req.session.error){
 		req.session.error = null;
 	}

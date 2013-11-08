@@ -1,5 +1,37 @@
-var Evernote = require('evernote').Evernote, config = require('../config.json'), callbackUrl = "http://localhost:3000/oauth_callback", childProcess = require('child_process'), phantomjs = require('phantomjs'), utilityModule = require('./utilityModule.js'), mongoose = require('mongoose'), connStr = "mongodb://127.0.0.1:27017/chalish-user-table", User = require('./user-model');
+var Evernote = require('evernote').Evernote, config = require('../config.json'), callbackUrl = "http://localhost:3000/oauth_callback", childProcess = require('child_process'), phantomjs = require('phantomjs'), utilityModule = require('./utilityModule.js'), mongoose = require('mongoose'), connStr = "mongodb://127.0.0.1:27017/chalish-user-table", User = require('./user-model'), env, mongo, mongourl;
 //binPath = phantomjs.path;
+
+// deploying project to AF. 
+// Create connection string for mongodb.
+if(process.env.VCAP_SERVICES){
+	env = JSON.parse(process.env.VCAP_SERVICES);
+	mongo = env['mongodb-1.8'][0]['credentials'];
+}
+else{
+	mongo = {
+		"hostname":"127.0.0.1",
+		"port":27017,
+		"username":"",
+		"password":"",
+		"name":"",
+		"db":"chalish-user-table"
+	}
+}
+
+generate_mongo_url = function(obj){
+	obj.hostname = (obj.hostname || 'localhost');
+	obj.port = (obj.port || 27017);
+	obj.db = (obj.db || 'test');
+	if(obj.username && obj.password){
+		return "mongodb://" + obj.username + ":" + obj.password + "@" + obj.hostname + ":" + obj.port + "/" + obj.db;
+	}
+	else{
+		return "mongodb://" + obj.hostname + ":" + obj.port + "/" + obj.db;
+	}
+}
+
+mongourl = generate_mongo_url(mongo);
+
 
 // checking the notes for tables, dates
 exports.notes = function(req,res) {
@@ -121,7 +153,7 @@ exports.login = function(req, res) {
   console.log('hier hier');
   console.log(req.body.email);
 
-  mongoose.connect(connStr, function(err) {
+  mongoose.connect(mongourl, function(err) {
     if (err) console.log(err);
     else console.log("Successfully connected to MongoDB");
   });
@@ -259,7 +291,7 @@ exports.createUser = function(req,res) {
   var newUser;
 
 
-  mongoose.connect(connStr, function(err) {
+  mongoose.connect(mongourl, function(err) {
     if (err) console.log(err);
     else console.log("Successfully connected to MongoDB");
   });

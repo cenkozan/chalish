@@ -12,16 +12,17 @@ block content
       p
         =session.error
     
-    form(action='/notes', method='POST')
-      select(name='select')
-        +note_list("Selection", 0)
-        if session.notes
-          for note in session.notes
-            +note_list(note.title, note.guid)
-        else
-          for note in notes
-            +note_list(note.title, note.guid)
-      input.input(type='submit', name='action', value='submit')
+    .center
+      form(action='/notes', method='POST')
+        select(name='select')
+          +note_list("Selection", 0)
+          if session.notes
+            for note in session.notes
+              +note_list(note.title, note.guid)
+          else
+            for note in notes
+              +note_list(note.title, note.guid)
+        input.input(type='submit', name='action', value='submit')
   
     #bar
   
@@ -91,5 +92,3 @@ block scripts
             }]
           });
         });
-  else
-    p high charts not loaded yet

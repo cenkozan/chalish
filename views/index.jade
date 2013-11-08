@@ -2,33 +2,46 @@ extends layout
 
 block content
   .content.section
+    a.reddit(href='http://www.reddit.com/r/chalish')
     h1 Create charts from evernote tables
     p 
       |Sign Up with 
       a(href='oauth') Evernote
     h2 What can you use it for? 
-    p
-      a(href='/images/Books_Read.png') The Books
-      |  you read?
-    p 
-      a(href='/images/Ongoing_Tasks.png') Your To-Do
-      |  lists?
+    .row.section
+      .columns.eight
+        p
+          a(href='/images/Books_Read.png') The Books
+          |  you read?
+      .columns.eight
+        p 
+          a(href='/images/Ongoing_Tasks.png') Your To-Do
+          |  lists?
     h2 Why Chalish?
-    p We are offering you another motivativing use for Evernote.
-    p We are asking you to use tools that are already in Evernote.
+    .row.section
+      .columns.eight
+        .smaller
+          p We are offering you a motivativing use for Evernote.
+      .columns.eight
+        .smaller
+          p We are only using tools that are already in Evernote.
     h2 Upcoming Features:
-    ul.section
-      li 
-        p Automated updating of notes with Charts without visiting Chalish.
-      li
-        p Number Charts, Daily Time Charts
-      li
-        p Clash your performance with other Chalish users.
-      li
-        p Chalish Robot warning you about your performance.
+    .row.section
+      .columns.four
+        .smaller
+          p Add Charts into notes without visiting Chalish.
+      .columns.four
+        .smaller
+          p Number Charts, Daily Time Charts, Tag Charts.
+      .columns.four
+        .smaller
+          p Clash with other Chalish users, get to the Top List.
+      .columns.four
+        .smaller
+          p Chalish Robot warning your performance.
     h3 
-      a(href='#') Contact us
-      |  for questions & suggestions.
+      |Sign Up with 
+      a(href='oauth') Evernote
   .showwidth
 block footer
   .footer.section
