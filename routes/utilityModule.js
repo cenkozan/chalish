@@ -1,6 +1,4 @@
-var xmlsimple = require('xml-simple'), 
-		xml2js = require('xml2js'),
-		moment = require('moment'),
+var	moment = require('moment'),
 		fs = require('fs'),
 		nodexmllite = require('node-xml-lite');
 

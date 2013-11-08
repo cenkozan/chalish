@@ -1,6 +1,5 @@
 var mongoose = require("mongoose"),
 		Schema = mongoose.Schema,
-		scrypt = require("scrypt"),
 		bcrypt = require("bcrypt"),
 		maxtime = 0.1,
 		SALT_WORK_FACTOR = 10,

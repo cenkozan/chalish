@@ -1,31 +1,25 @@
 {
-  "name": "evernote-sdk-sample-node",
-  "description": "Evernote SDK sample for Node.js",
+  "name": "Chalish",
+  "description": "Create Charts From Evernote Tables",
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "start": "nodemon app.js",
-		"test": "mocha"
   },
   "dependencies": {
     "express": "3.1.0",
     "jade": "*",
     "less-middleware": "*",
     "evernote": "*",
-		"xml2js": "*",
 		"moment": "*",
 		"phantomjs": "*",
-		"d3": "*",
 		"node-xml-lite": "*",
 		"node-sass": "*",
-		"node-scrypt": "*",
 		"bcrypt": "*",
 		"mongoose": "*",
 		"passport": "*",
 		"passport-local": "*"
 	},
 	"devDependencies": {
-		"nodemon": "*",
 		"mocha": "*",
 		"expect.js": "*",
 		"should": "*"
