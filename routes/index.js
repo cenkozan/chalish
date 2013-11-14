@@ -1,4 +1,4 @@
-var Evernote = require('evernote').Evernote, config = require('../config.json'), callbackUrl = "http://localhost:3000/oauth_callback", childProcess = require('child_process'), phantomjs = require('phantomjs'), utilityModule = require('./utilityModule.js'), mongoose = require('mongoose'), connStr = "mongodb://127.0.0.1:27017/chalish-user-table", User = require('./user-model'), env, mongo, mongourl;
+var Evernote = require('evernote').Evernote, config = require('../config.json'), callbackUrl = "http://localhost:3000/oauth_callback", childProcess = require('child_process'), phantomjs = require('phantomjs'), utilityModule = require('./utilityModule.js'), mongoose = require('mongoose'), connStr = process.env.MONGOLAB_URI || process.env.MONGOHQ_URL || "mongodb://127.0.0.1:27017/chalish-user-table", User = require('./user-model'), env, mongo, mongourl;
 //binPath = phantomjs.path;
 
 // deploying project to AF. 
