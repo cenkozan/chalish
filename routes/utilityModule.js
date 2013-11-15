@@ -1,3 +1,6 @@
+//This file is used for extracting and manupilating Date Data from Evernote notes.
+
+
 var	moment = require('moment'),
 		fs = require('fs'),
 		nodexmllite = require('node-xml-lite');
