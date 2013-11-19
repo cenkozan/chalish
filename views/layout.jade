@@ -11,9 +11,11 @@ html
       .header.section
         .logo
           img(src='images/chalish-logo.svg')
-        -if (session.email)
+        -if (session.email == 'create')
           .right
-            p Username: 
+        -else if (session.email)
+          .right
+            p Username= 
               =session.email
             a(href='/clear') Logout
         -else

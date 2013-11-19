@@ -280,6 +280,32 @@ p {
   margin: 0 auto;
 }
 
+/*create user form */
+.formcreate {
+	margin: 0 auto;
+	width: 25%;
+}
+
+.formcreate .row .columns.eight p {
+	text-align: left;
+}
+
+.formcreate .row .columns.eight p:first-letter {
+	font-size: 1em;
+}
+
+.formcreate .row .columns.sixteen {
+	text-align: center;
+}
+
+/* NOTES.JADE */
+
+.center {
+	margin: 0 auto;
+	width: 50%;
+	text-align: center;
+}
+
 /* $FOOTER *****************/
 
 .footer {
@@ -310,6 +336,11 @@ p {
 	.content .columns.eight .smaller {
 		width: 38%;
 	}
+
+	.formcreate {
+		width: 40%;
+	}
+
 }
 
 
@@ -365,8 +396,6 @@ p {
 
 @media only screen and (max-width: 620px) {
 	.content.section h1 {
-	}
-
 	h1 {
 		font-size: 2em;
 	}
@@ -399,6 +428,14 @@ p {
 		width: 	100%;
 		text-align: center;
 	}
+
+	.formcreate {
+		width: 45%;
+	}
+
+	.formcreate .row .columns.eight p {
+		text-align: center;
+	}	
 
 	.footer p {
 		text-align: center;

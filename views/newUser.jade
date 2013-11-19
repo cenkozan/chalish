@@ -1,10 +1,20 @@
-extends layoutwithoutlogin
+extends layout
 
 block content
-	h2 Create a user
-	form(action='/createUser', method='POST')
-		p E-Mail
-			input(name='email')
-		p Password
-			input(name='password')
-		input.input(type='submit', name='createUser', value='Create User')
+  .content.section
+    h2 Create your user
+    .formcreate
+      form(action='/createUser', method='POST')
+        .row
+          .columns.eight
+            p E-Mail
+          .columns.eight
+            input(name='email')
+        .row
+          .columns.eight
+            p Password
+          .columns.eight
+            input(type='password', name='password')
+        .row
+          .columns.sixteen
+            input(type='submit', name='createUser', value='Create User')

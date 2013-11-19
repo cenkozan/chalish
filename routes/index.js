@@ -1,37 +1,5 @@
-var Evernote = require('evernote').Evernote, config = require('../config.json'), callbackUrl = "http://localhost:3000/oauth_callback", childProcess = require('child_process'), phantomjs = require('phantomjs'), utilityModule = require('./utilityModule.js'), mongoose = require('mongoose'), connStr = process.env.MONGOLAB_URI || process.env.MONGOHQ_URL || "mongodb://127.0.0.1:27017/chalish-user-table", User = require('./user-model'), env, mongo, mongourl;
+var Evernote = require('evernote').Evernote, config = require('../config.json'), callbackUrl, childProcess = require('child_process'), phantomjs = require('phantomjs'), utilityModule = require('./utilityModule.js'), mongoose = require('mongoose'), connStr = process.env.MONGOLAB_URI || process.env.MONGOHQ_URL || "mongodb://127.0.0.1:27017/chalish-user-table", User = require('./user-model');
 //binPath = phantomjs.path;
-
-// deploying project to AF. 
-// Create connection string for mongodb.
-if(process.env.VCAP_SERVICES){
-	env = JSON.parse(process.env.VCAP_SERVICES);
-	mongo = env['mongodb-1.8'][0]['credentials'];
-}
-else{
-	mongo = {
-		"hostname":"127.0.0.1",
-		"port":27017,
-		"username":"",
-		"password":"",
-		"name":"",
-		"db":"chalish-user-table"
-	}
-}
-
-generate_mongo_url = function(obj){
-	obj.hostname = (obj.hostname || 'localhost');
-	obj.port = (obj.port || 27017);
-	obj.db = (obj.db || 'test');
-	if(obj.username && obj.password){
-		return "mongodb://" + obj.username + ":" + obj.password + "@" + obj.hostname + ":" + obj.port + "/" + obj.db;
-	}
-	else{
-		return "mongodb://" + obj.hostname + ":" + obj.port + "/" + obj.db;
-	}
-}
-
-mongourl = generate_mongo_url(mongo);
-
 
 // checking the notes for tables, dates
 exports.notes = function(req,res) {
@@ -109,15 +77,19 @@ exports.notes = function(req,res) {
     //note_filter.ascending = 'false';
     var filter 		= req.query.filter || note_filter;
     var offset 		= req.query.offset || 0;
-    var maxNotes 		= req.query.maxNotes || '100';
+		console.log('oorrrpu');
+    var maxNotes 		= req.query.maxNotes || '500';
+		console.log('oorrrpu 2');
     var resultSpec = new Evernote.NotesMetadataResultSpec({includeTitle : 'true'});
     //var resultSpec 		= req.query.resultSpec || '';
 
-    note_store.findNotesMetadata(token,  filter, offset, maxNotes, resultSpec, function(returnedData) {;
+    note_store.findNotesMetadata(token,  filter, offset, maxNotes, resultSpec, function(returnedData) {
 
+		console.log('oorrrpu 3');
       if(returnedData.totalNotes === 0){
         console.log('You have 0 notes in your Evernote Account. Chalish requires you have notes in your Evernote account.');
       } else {
+				console.log('buraya girdi');
         var notes = returnedData.notes;
         res.render('notes', {notes: notes, data: null, monthNamesArray: null});
         req.session.notes = notes;
@@ -153,7 +125,7 @@ exports.login = function(req, res) {
   console.log('hier hier');
   console.log(req.body.email);
 
-  mongoose.connect(mongourl, function(err) {
+  mongoose.connect(connStr, function(err) {
     if (err) console.log(err);
     else console.log("Successfully connected to MongoDB");
   });
@@ -231,6 +203,8 @@ exports.oauth = function(req, res) {
       consumerSecret: config.API_CONSUMER_SECRET,
       sandbox: config.SANDBOX
   });
+	
+	callbackUrl = "http://" + req.headers.host + "/oauth_callback";
   client.getRequestToken(callbackUrl, function(error, oauthToken, oauthTokenSecret, results){
     if (error) {
       console.log('what');
@@ -280,6 +254,10 @@ exports.oauth_callback = function(req, res) {
           // Let's ask the User his e-mail, and a password to create
           // a user for him in Evernote.
           // Have to create a new page for this.
+					
+					// 11/15/2013 Setting the email to 'create' so that
+					// the login form won't show.
+					req.session.email = 'create';
           res.render('newUser');
         }
       });
@@ -291,7 +269,7 @@ exports.createUser = function(req,res) {
   var newUser;
 
 
-  mongoose.connect(mongourl, function(err) {
+  mongoose.connect(connStr, function(err) {
     if (err) console.log(err);
     else console.log("Successfully connected to MongoDB");
   });
