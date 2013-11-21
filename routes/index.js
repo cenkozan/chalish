@@ -64,9 +64,6 @@ exports.notes = function(req,res) {
   }
   // If not, chalish will search the notes with the tables in them.
   // Check the else statement below.
-  // September 18, 2013  /  Changing this.
-  // Notes will be automatically searched, ones with 
-  // tables will be in the select list.
   else {
 
     console.log('enters here');
