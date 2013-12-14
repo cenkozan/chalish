@@ -1,4 +1,4 @@
-var Evernote = require('evernote').Evernote, config = require('../config.json'), callbackUrl, childProcess = require('child_process'), phantomjs = require('phantomjs'), utilityModule = require('./utilityModule.js'), mongoose = require('mongoose'), connStr = process.env.MONGOLAB_URI || process.env.MONGOHQ_URL || "mongodb://127.0.0.1:27017/chalish-user-table", User = require('./user-model');
+var config = require('../config.json'), callbackUrl, childProcess = require('child_process'), phantomjs = require('phantomjs'), utilityModule = require('./utilityModule.js'), mongoose = require('mongoose'), connStr = process.env.MONGOLAB_URI || process.env.MONGOHQ_URL || "mongodb://127.0.0.1:27017/chalish-user-table", User = require('./user-model');
 //binPath = phantomjs.path;
 
 // checking the notes for tables, dates
@@ -7,114 +7,9 @@ exports.notes = function(req,res) {
 	if (!req.session.oauthAccessToken)
 		return res.redirect('/');
 
-	var token = req.session.oauthAccessToken, 
-			client = new Evernote.Client({
-				token: token,
-			sandbox: config.SANDBOX}),
-			note_store = client.getNoteStore(),
-			selectedGuid = req.body.select, 
-			dates, 
-			monthNamesArray = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'], 
-			sortFunction,
-			numberOfWorksPerMonth;
+  res.render('notes', {token: JSON.stringify(req.session.oauthAccessToken), notes: null, data: null, monthNamesArray: null});
 
-	console.log('selectedGuid: ', selectedGuid);
-	//console.log('req.body.select: ', req.body.select);
-
-	// If comming from the notes screen & a Note has been selected.
-	// In this case, note will have a table, and chalish will create
-	// chart from this table.
-	if(selectedGuid && selectedGuid != 0) {
-		note_store.getNoteContent(token, selectedGuid, function(noteContent){
-			//console.log(noteContent);
-			utilityModule.processXML2(noteContent, function callback(err, dates) {
-				if (err){
-					req.session.error = err;
-					res.render('notes', {monthNamesArray: null, data: null});
-				}
-				else {
-						sortFunction = function (a,b){  
-							return a.StartDate.valueOf() - b.StartDate.valueOf();  
-						}; 
-						dates.sort(sortFunction);
-						//console.log(JSON.stringify(dates));
-						//We extract previous years' data 
-            //Get their average 
-            //Average array starts with the average
-            //Pushes
-						//to the view too as another Axis.
-						utilityModule.extractPreviousYearsAverage(dates, function callback(error, previousYearsAverage, thisYearsData) {
-              if (err){
-                req.session.error = err;
-                res.render('notes', {monthNamesArray: null, data: null});
-              }
-              else {
-                //console.log(thisYearsData);
-                numberOfWorksPerMonth = utilityModule.monthsAndNumberOfWorksDone(thisYearsData, monthNamesArray);
-                console.log('numberof works done per month= ', JSON.stringify(numberOfWorksPerMonth));
-                averages = utilityModule.calculateAverages(previousYearsAverage, numberOfWorksPerMonth);
-                console.log('averages: ', JSON.stringify(averages));
-                res.render('notes', {monthNamesArray: JSON.stringify(monthNamesArray), workData: JSON.stringify(numberOfWorksPerMonth), averageData: JSON.stringify(averages)});
-              } 
-            });
-        }
-      });
-    });	
-
-  }
-  // If not, chalish will search the notes with the tables in them.
-  // Check the else statement below.
-  else {
-
-    console.log('enters here');
-    //req.session.note_store = note_store;
-
-    var note_filter = new Evernote.NoteFilter();
-    //note_filter.order = 'UPDATED';
-    //note_filter.ascending = 'false';
-    var filter 		= req.query.filter || note_filter;
-    var offset 		= req.query.offset || 0;
-		console.log('oorrrpu');
-    var maxNotes 		= req.query.maxNotes || '500';
-		console.log('oorrrpu 2');
-    var resultSpec = new Evernote.NotesMetadataResultSpec({includeTitle : 'true'});
-    //var resultSpec 		= req.query.resultSpec || '';
-
-    note_store.findNotesMetadata(token,  filter, offset, maxNotes, resultSpec, function(returnedData) {
-
-		console.log('oorrrpu 3');
-      if(returnedData.totalNotes === 0){
-        console.log('You have 0 notes in your Evernote Account. Chalish requires you have notes in your Evernote account.');
-      } else {
-				console.log('buraya girdi');
-        var notes = returnedData.notes;
-        res.render('notes', {notes: notes, data: null, monthNamesArray: null});
-        req.session.notes = notes;
-        /*console.log(notes.totalNotes);
-          var metadataList = new Evernote.NotesMetadataList();
-          metadataList = notes;
-          var note = new Evernote.NoteMetadata();
-          note = notes.notes;
-          req.session.note = note;
-          console.log(note);
-          for (var i = 0; i < metadataList.totalNotes; i++) {
-          console.log(note[i].guid);
-          note_store.getNoteContent(token, note[i].guid, function(callback){
-          console.log(callback);
-          });
-          }*/
-
-        //for now, read from a file, for offline, and speed reasons
-        //console.log('processing');
-        //returns starts and end dates in an array.
-      }
-    });
-  }
-  /*note_store.listNotebooks(token, function(notebooks){
-    req.session.notebooks = notebooks;
-    res.render('index');
-    });*/
-};//end of exports.check
+};//end of exports.notes
 
 // after login button pressed.
 // check the DB for the matching password.

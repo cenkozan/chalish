@@ -1,9 +1,15 @@
 // Module dependencies and Variables
-var express = require('express'),
+var connect = require('connect'),
+		express = require('express'),
 		routes = require('./routes'),
 		http = require('http'),
 		path = require('path'),
-		app = express();
+		cookieParser = express.cookieParser('this is a secret cookie'),
+		sessionStore = new connect.middleware.session.MemoryStore(),
+		sio = require('socket.io'),
+		SessionSockets = require('session.socket.io'),
+		app = express(),
+		server, io, sockets = require('./routes/sockets');
 
 // Configurations
 app.configure(function(){
@@ -15,8 +21,8 @@ app.configure(function(){
 	app.use(express.bodyParser());
 
 	app.use(express.methodOverride());
-	app.use(express.cookieParser());
-	app.use(express.session({secret: 'this is a secret'}));
+	app.use(cookieParser);
+	app.use(express.session( {store: sessionStore }));
 	app.use(function(req, res, next) {
 		res.locals.session = req.session;
 		next();
@@ -64,6 +70,11 @@ app.post('/notes', function (req, res) {
 });
 
 // Run
-http.createServer(app).listen(app.get('port'), function(){
+server = http.createServer(app).listen(app.get('port'), function(){
 	console.log("Express server listening on port " + app.get('port'));
 });
+
+//io = sio.listen(server);
+
+//sessionSockets = new SessionSockets(io, sessionStore, cookieParser);
+sockets.socketServer(server);

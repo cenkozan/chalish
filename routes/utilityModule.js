@@ -108,9 +108,14 @@ var monthsAndNumberOfWorksDone = function (dates, monthNamesArray) {
 	return toReturn;
 }
 
+var formatStructure = function (table) {
+	console.log('table childs length: ', table.childs.length);
+	//console.log(JSON.stringify(table));
+}
+
 var processXML2 = function (noteContent, callback) {
 	try {
-		var parsed, dates = [], table, firstDateColumn, secondDateColumn, firstDateColumnFound = false, secondDateColumnFound = false, algorithmStart; 
+		var parsed, dates = [], table, tableChildTr, firstDateColumn, secondDateColumn, firstDateColumnFound = false, secondDateColumnFound = false, algorithmStart; 
 		parsed = nodexmllite.parseString(noteContent);
 		//console.log(parsed);
 		function checkEveryChild(data) {
@@ -126,10 +131,27 @@ var processXML2 = function (noteContent, callback) {
 			}
 		}
 		checkEveryChild(parsed);
-		//console.log('dates', table);
-		//Table is found.  Check every column of the table for 
+		//Table is found. But the direct child of table doesn't start with <tr> necessarilly.
+		//So we have to check if the name of the child is tr in a while loop.
+		//console.log(JSON.stringify(table));
+		function checkTableChildIsTr(data) {
+			if (data.childs[0].name == 'tr') {
+				console.log('true true: ', data.childs[0].name);
+				tableChildTr = data;
+			}
+			else if (data.childs) {
+				checkTableChildIsTr(data.childs[0]);
+				//jdata.childs.forEach(function (element) {
+					//checkTableChildIsTr(element);
+				//});
+			}
+		}
+		checkTableChildIsTr(table);
+		console.log('true that: ', tableChildTr.childs.length);
+		//Check every column of the table for 
 		//two adjacent date columns.
-		if (table) {
+		if (tableChildTr) {
+			formatStructure(table);
 			//For each Row in the Table
 			table.childs.forEach(function (row, index) {
 				// Checking if the table has less than 2 columns.  2 columns are needed. 
@@ -181,9 +203,10 @@ var processXML2 = function (noteContent, callback) {
 				// have date columns too, and will add them to the 
 				// date array if so
 				else {
-					dateColumn1 = checkColumnIfDate(row.childs[firstDateColumn]);
+					//console.log('algorithm starta giriyor');
+					dateColumn1 = checkColumnIfDate2(row.childs[firstDateColumn]);
 					//console.log('dateColumn1: ' + JSON.stringify(dateColumn1));
-					dateColumn2 = checkColumnIfDate(row.childs[secondDateColumn]);
+					dateColumn2 = checkColumnIfDate2(row.childs[secondDateColumn]);
 					//console.log('dateColumn2: ' + JSON.stringify(dateColumn2));
 					if (dateColumn1 && dateColumn2) {
 						//since both are full, they are eligible for taking place
@@ -193,7 +216,7 @@ var processXML2 = function (noteContent, callback) {
 
 				} //end of else (algorithmStart)
 			}); //end of forEach row in table
-			console.log(JSON.stringify(dates));
+			console.log('printing out dates array: ', JSON.stringify(dates));
 			callback(null, dates);
 		}//end of if table
 		else {
