@@ -1,15 +1,15 @@
 // Module dependencies and Variables
-var connect = require('connect'),
-		express = require('express'),
+var express = require('express'),
 		routes = require('./routes'),
 		http = require('http'),
 		path = require('path'),
+		app = express();
+		/*connect = require('connect'),
 		cookieParser = express.cookieParser('this is a secret cookie'),
 		sessionStore = new connect.middleware.session.MemoryStore(),
 		sio = require('socket.io'),
 		SessionSockets = require('session.socket.io'),
-		app = express(),
-		server, io, sockets = require('./routes/sockets');
+		server, io, sockets = require('./routes/sockets');*/
 
 // Configurations
 app.configure(function(){
@@ -21,8 +21,8 @@ app.configure(function(){
 	app.use(express.bodyParser());
 
 	app.use(express.methodOverride());
-	app.use(cookieParser);
-	app.use(express.session( {store: sessionStore }));
+	app.use(express.cookieParser('this is a secret cookie'));
+	app.use(express.session());
 	app.use(function(req, res, next) {
 		res.locals.session = req.session;
 		next();
@@ -43,6 +43,7 @@ app.get('/notes', routes.notes);
 app.get('/oauth', routes.oauth);
 app.get('/oauth_callback', routes.oauth_callback);
 app.get('/clear', routes.clear);
+app.get('/notesLoad', routes.notesLoad);
 //app.get('/newUser', function (req, res) {
 	//res.render('newUser');
 //}
@@ -70,11 +71,10 @@ app.post('/notes', function (req, res) {
 });
 
 // Run
-server = http.createServer(app).listen(app.get('port'), function(){
+http.createServer(app).listen(app.get('port'), function(){
 	console.log("Express server listening on port " + app.get('port'));
 });
 
 //io = sio.listen(server);
-
 //sessionSockets = new SessionSockets(io, sessionStore, cookieParser);
-sockets.socketServer(server);
+//sockets.socketServer(server);

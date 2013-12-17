@@ -1,9 +1,14 @@
-var socketio = require('socket.io'), Evernote = require('evernote').Evernote, 
-		utilityModule = require('./utilityModule.js'), async = require('async'),
-		token, client, sandbox, config = require('../config.json'), note_store,
-		selectedGuid, dates, 
-		monthNamesArray = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'], notes = [], sortFunction, numberOfWorksPerMonth, io, 
-		note_filter, filter, offset, maxNotes, resultSpec, totalNoteLength;
+var socketio = require('socket.io'),
+		Evernote = require('evernote').Evernote, 
+		utilityModule = require('./utilityModule.js'),
+		async = require('async'),
+		token, client, sandbox, 
+		config = require('../config.json'),
+		note_store, selectedGuid, dates, 
+		monthNamesArray = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+		notes = [], sortFunction, numberOfWorksPerMonth,
+		io, note_filter, filter, offset, maxNotes,
+		resultSpec, totalNoteLength;
 
 exports.socketServer = function (server) {
 

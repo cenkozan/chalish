@@ -1,5 +1,86 @@
-var config = require('../config.json'), callbackUrl, childProcess = require('child_process'), phantomjs = require('phantomjs'), utilityModule = require('./utilityModule.js'), mongoose = require('mongoose'), connStr = process.env.MONGOLAB_URI || process.env.MONGOHQ_URL || "mongodb://127.0.0.1:27017/chalish-user-table", User = require('./user-model');
+var config = require('../config.json'), 
+		callbackUrl, 
+		childProcess = require('child_process'),
+		Evernote = require('evernote').Evernote, 
+		async = require('async'),
+		token, client, sandbox, 
+		note_store, selectedGuid, dates, 
+		monthNamesArray = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+		notes = [], sortFunction, numberOfWorksPerMonth,
+		note_filter, filter, offset, maxNotes,
+		resultSpec, totalNoteLength;
+		phantomjs = require('phantomjs'),
+		utilityModule = require('./utilityModule.js'),
+		mongoose = require('mongoose'),
+		connStr = process.env.MONGOLAB_URI || process.env.MONGOHQ_URL || "mongodb://127.0.0.1:27017/chalish-user-table",
+		User = require('./user-model');
 //binPath = phantomjs.path;
+
+exports.notesLoad = function(req,res) {
+	console.log('buraya geldi');
+	if (token = req.session.oauthAccessToken) {
+		client = new Evernote.Client({ token: token, sandbox: config.SANDBOX});
+		note_store = client.getNoteStore();
+		//console.log('enters here');
+		//req.session.note_store = note_store;
+
+		filter = new Evernote.NoteFilter();
+		filter.order = 'TITLE';
+		filter.ascending = 'false';
+		offset = 0;
+		maxNotes = '250';
+		resultSpec = new Evernote.NotesMetadataResultSpec({includeTitle : 'true'});
+
+		console.log('buraya geliyor mu?');
+
+		async.doWhilst(
+			function (callback) {
+				console.log('deneme');
+				console.log('offset: ', offset);
+				note_store.findNotesMetadata (token,  filter, offset, maxNotes, resultSpec, function (error, returnedData) {
+					if (error) {
+						console.log('error: ', error);
+						callback(error);
+					}
+					totalNoteLength = returnedData.totalNotes;
+					offset = offset + returnedData.notes.length;
+					console.log('offset: ', offset);
+					console.log('totalNoteLength: ', totalNoteLength);
+					console.log('returnedData notes length: ', returnedData.notes.length);
+					function pushArray (element, index, array) {
+						notes.push(element);
+					}
+					returnedData.notes.forEach(pushArray);
+					//notes.push(returnedData.notes);
+					console.log('buraya geldi: ', notes.length);
+					callback(error);
+				});
+			},
+			function () {
+				console.log('burada. totalnotelength ve notes.length = ', totalNoteLength, notes.length);
+				return totalNoteLength > notes.length;
+			},
+			function (err) {
+				if (totalNoteLength == notes.length) {
+					console.log('total number of notes: ', totalNoteLength);
+					console.log('total number of notes: ', notes.length);
+					notes.sort(function(a, b){
+						a = a.title.toLowerCase(); b = b.title.toLowerCase();
+						if(a < b) return -1;
+						if(a > b) return 1;
+						return 0;
+					});
+					console.log('emitting, hell yeah');
+					//socket.emit('noteLoad', {notes: JSON.stringify(notes)});
+					//socket.disconnect();
+					res.writeHead(200, {'content-type': 'text/json' });
+					res.write(JSON.stringify({ notes: notes}));
+					res.end('\n');
+				}
+			}
+		);
+	}
+};
 
 // checking the notes for tables, dates
 exports.notes = function(req,res) {
@@ -191,5 +272,6 @@ exports.createUser = function(req,res) {
 // Clear session
 exports.clear = function(req, res) {
   req.session.destroy();
+	notes = null;
   res.redirect('/');
 };

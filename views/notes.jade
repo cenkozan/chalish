@@ -19,24 +19,24 @@ block content
           if session.notes
             for note in session.notes
               +note_list(note.title, note.guid)
-        input.input(type='submit', name='action', value='submit')
+        input.input(type='submit', name='action', value='submit', disabled='true')
   
     #bar
     p#hande
   
 block scripts
-  script(src='/js/libs/socket.io.min.js')
+  script(src='http://code.jquery.com/jquery-latest.min.js')
   script.
-    window.onload = function() {
-      var socket = io.connect();
-      socket.emit('requestNotes', {token: !{token}});
-      socket.on('noteLoad', function (data) {
-        alert('heyo');
-        document.getElementById('hande').append(JSON.stringify(data));
+    $(document).ready(function() {
+      $.ajax('/notesLoad', {
+        type: 'GET',
+        dataType: 'json',
+        success: function(data) {
+          alert(JSON.stringify(data));
+        }
       });
-    }
+      });
   if workData
-    script(src='http://code.jquery.com/jquery-latest.min.js')
     script(src='/js/libs/highcharts.js')
     script(src='/js/libs/exporting.js')
     script.
