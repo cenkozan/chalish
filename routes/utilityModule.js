@@ -3,12 +3,145 @@
 
 var	moment = require('moment'),
 		fs = require('fs'),
-		nodexmllite = require('node-xml-lite');
+		nodexmllite = require('node-xml-lite'),
+    config = require('../config.json'),
+		Evernote = require('evernote').Evernote, 
+		async = require('async'),
+		notes, token, client, sandbox, 
+		selectedGuid, dates, 
+		client, noteStore,
+		monthNamesArray = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+		notes = [], sortFunction, numberOfWorksPerMonth,
+		note_filter, filter, offset, maxNotes,
+		resultSpec, totalNoteLength;
+
+// Returns data necessary for highcharts if note is appropriate
+// returns error if not 
+var getChartData = function (token, selectedGuid, toReturn) {
+	console.log('token: ', token);
+	console.log('selectedGuid', selectedGuid);
+	getNoteStore(token).getNoteContent(token, selectedGuid, function(error, noteContent){
+		if (error) console.log('fuck this shit: ', error);
+		console.log(noteContent);
+		processXML2(noteContent, function callback(err, dates) {
+			if (err){
+				return toReturn(err, null);
+				//res.render('notes', {monthNamesArray: null, data: null});
+			}
+			else {
+				sortFunction = function (a,b){  
+					return a.StartDate.valueOf() - b.StartDate.valueOf();  
+				}; 
+				dates.sort(sortFunction);
+				//console.log(JSON.stringify(dates));
+				//We extract previous years' data 
+				//Get their average 
+				//Average array starts with the average
+				//Pushes to the view too as another Axis.
+				extractPreviousYearsAverage(dates, function callback(error, previousYearsAverage, thisYearsData) {
+					if (err){
+						toReturn(err, null);
+						//req.session.error = err;
+						//res.render('notes', {monthNamesArray: null, data: null});
+					}
+					else {
+						//console.log(thisYearsData);
+						numberOfWorksPerMonth = monthsAndNumberOfWorksDone(thisYearsData, monthNamesArray);
+						console.log('numberof works done per month= ', JSON.stringify(numberOfWorksPerMonth));
+						averages = calculateAverages(previousYearsAverage, numberOfWorksPerMonth);
+						console.log('averages: ', JSON.stringify(averages));
+						toReturn(null, { monthNamesArray: monthNamesArray, workData: numberOfWorksPerMonth, averageData: averages } );
+						//res.render('notes', {monthNamesArray: JSON.stringify(monthNamesArray), workData: JSON.stringify(numberOfWorksPerMonth), averageData: JSON.stringify(averages)});
+					} 
+				});
+			}
+		});
+	});
+}
+
+// an Evernote client for common use
+var getNoteStore = function (token) {
+	console.log('enter  here');
+	console.log(noteStore);
+	if (typeof noteStore !== 'object') {
+		console.log('enters here');
+		client = new Evernote.Client({ token: token, sandbox: config.SANDBOX});
+		return client.getNoteStore();
+	}
+	else {
+		console.log('no, enters here');
+		return noteStore;
+	}
+}
+
+
+// returns all the notes in the evernote account sorted by name
+var notesLoad = function(token, toReturn) {
+	notes = [];
+
+	filter = new Evernote.NoteFilter();
+	filter.order = 'TITLE';
+	filter.ascending = 'false';
+	offset = 0;
+	maxNotes = '250';
+	resultSpec = new Evernote.NotesMetadataResultSpec({includeTitle : 'true'});
+
+	async.doWhilst(
+		function (callback) {
+			console.log('deneme');
+			console.log('offset: ', offset);
+			getNoteStore(token).findNotesMetadata (token,  filter, offset, maxNotes, resultSpec, function (error, returnedData) {
+				if (error) {
+					console.log('error: ', error);
+					toReturn(error, null);
+				}
+				totalNoteLength = returnedData.totalNotes;
+				offset = offset + returnedData.notes.length;
+				console.log('offset: ', offset);
+				console.log('totalNoteLength: ', totalNoteLength);
+				console.log('returnedData notes length: ', returnedData.notes.length);
+				function pushArray (element, index, array) {
+					notes.push(element);
+				}
+				returnedData.notes.forEach(pushArray);
+				//notes.push(returnedData.notes);
+				//console.log('buraya geldi: ', notes.length);
+				callback(error);
+			});
+		},
+		function () {
+			//console.log('burada. totalnotelength ve notes.length = ', totalNoteLength, notes.length);
+			return totalNoteLength > notes.length;
+		},
+		function (err) {
+			if (err) {
+				toReturn(err, null);
+			}
+			else if (totalNoteLength == notes.length) {
+				//console.log('total number of notes: ', totalNoteLength);
+				//console.log('total number of notes: ', notes.length);
+				notes.sort(function(a, b){
+					a = a.title.toLowerCase(); b = b.title.toLowerCase();
+					if(a < b) return -1;
+					if(a > b) return 1;
+					return 0;
+				});
+				//console.log('emitting, hell yeah');
+				toReturn(null, notes);
+				//socket.emit('noteLoad', {notes: JSON.stringify(notes)});
+				//socket.disconnect();
+				//res.writeHead(200, {'content-type': 'text/json' });
+				//res.write(JSON.stringify({ notes: notes}));
+				//res.end('\n');
+			}
+		}
+	);
+}
 
 //Extracts previous years' data, and return their average of work monthly. 
 // 1) Extract the dates that are different from this year.
 // 2) Divident = Number of works finished before this year
-// 3) DividedBy = The number of months passed since the first date in the array.
+// 3) DividedBy = The number of months passed since the first date in the array
 var extractPreviousYearsAverage = function (dates, callback) {
 	//domain.run(function (){
 	try {
@@ -576,3 +709,5 @@ module.exports.processXML2 = processXML2;
 module.exports.extractPreviousYearsAverage = extractPreviousYearsAverage;
 module.exports.monthsAndNumberOfWorksDone = monthsAndNumberOfWorksDone;
 module.exports.calculateAverages = calculateAverages;
+module.exports.notesLoad = notesLoad;
+module.exports.getChartData = getChartData;

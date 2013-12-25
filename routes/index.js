@@ -1,96 +1,80 @@
 var config = require('../config.json'), 
 		callbackUrl, 
 		childProcess = require('child_process'),
-		Evernote = require('evernote').Evernote, 
-		async = require('async'),
-		token, client, sandbox, 
-		note_store, selectedGuid, dates, 
-		monthNamesArray = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-		notes = [], sortFunction, numberOfWorksPerMonth,
-		note_filter, filter, offset, maxNotes,
-		resultSpec, totalNoteLength;
 		phantomjs = require('phantomjs'),
 		utilityModule = require('./utilityModule.js'),
 		mongoose = require('mongoose'),
 		connStr = process.env.MONGOLAB_URI || process.env.MONGOHQ_URL || "mongodb://127.0.0.1:27017/chalish-user-table",
-		User = require('./user-model');
+		User = require('./user-model'),
+		selectedGuid,
+		chartData;
 //binPath = phantomjs.path;
-
-exports.notesLoad = function(req,res) {
-	console.log('buraya geldi');
-	if (token = req.session.oauthAccessToken) {
-		client = new Evernote.Client({ token: token, sandbox: config.SANDBOX});
-		note_store = client.getNoteStore();
-		//console.log('enters here');
-		//req.session.note_store = note_store;
-
-		filter = new Evernote.NoteFilter();
-		filter.order = 'TITLE';
-		filter.ascending = 'false';
-		offset = 0;
-		maxNotes = '250';
-		resultSpec = new Evernote.NotesMetadataResultSpec({includeTitle : 'true'});
-
-		console.log('buraya geliyor mu?');
-
-		async.doWhilst(
-			function (callback) {
-				console.log('deneme');
-				console.log('offset: ', offset);
-				note_store.findNotesMetadata (token,  filter, offset, maxNotes, resultSpec, function (error, returnedData) {
-					if (error) {
-						console.log('error: ', error);
-						callback(error);
-					}
-					totalNoteLength = returnedData.totalNotes;
-					offset = offset + returnedData.notes.length;
-					console.log('offset: ', offset);
-					console.log('totalNoteLength: ', totalNoteLength);
-					console.log('returnedData notes length: ', returnedData.notes.length);
-					function pushArray (element, index, array) {
-						notes.push(element);
-					}
-					returnedData.notes.forEach(pushArray);
-					//notes.push(returnedData.notes);
-					console.log('buraya geldi: ', notes.length);
-					callback(error);
-				});
-			},
-			function () {
-				console.log('burada. totalnotelength ve notes.length = ', totalNoteLength, notes.length);
-				return totalNoteLength > notes.length;
-			},
-			function (err) {
-				if (totalNoteLength == notes.length) {
-					console.log('total number of notes: ', totalNoteLength);
-					console.log('total number of notes: ', notes.length);
-					notes.sort(function(a, b){
-						a = a.title.toLowerCase(); b = b.title.toLowerCase();
-						if(a < b) return -1;
-						if(a > b) return 1;
-						return 0;
-					});
-					console.log('emitting, hell yeah');
-					//socket.emit('noteLoad', {notes: JSON.stringify(notes)});
-					//socket.disconnect();
-					res.writeHead(200, {'content-type': 'text/json' });
-					res.write(JSON.stringify({ notes: notes}));
-					res.end('\n');
-				}
-			}
-		);
-	}
-};
 
 // checking the notes for tables, dates
 exports.notes = function(req,res) {
+	if (!req.session.oauthAccessToken)
+		return res.redirect('/');	
+
+	res.render('notes', {token: JSON.stringify(req.session.oauthAccessToken), noteList: null, notes: null, data: null, monthNamesArray: null});
+};//end of exports.notes
+
+exports.notesLoad = function(req, res) {
+	// if notes is in the session,
+	// else put it asynchronously
+	if (req.session.notes)
+	{
+		res.writeHead(200, {'content-type': 'application/json'});
+		res.write(JSON.stringify({notes: req.session.notes}));
+		res.end('\n');
+	}
+	else {
+		utilityModule.notesLoad(req.session.oauthAccessToken, function (err, notesLoad) {
+			if (err) {
+				req.session.error = err;
+				console.log(err);
+				return;
+			}
+			else if (!err && notesLoad) {
+				//i am putting the data into the session so 
+				//that the data is tied to the session.
+				req.session.notes = notesLoad;
+				res.writeHead(200, {'content-type': 'application/json'});
+				res.write(JSON.stringify({notes: notesLoad}));
+				res.end('\n');
+			}
+		});
+	}
+}
+
+exports.getChart = function(req, res) {
+
+	if (req.session.error) 
+		req.session.error = null;
+
+	console.log('request: ', req.body);
+	selectedGuid = req.body.selectedGuid;
+
+	console.log('selected guid: ', selectedGuid);
 
 	if (!req.session.oauthAccessToken)
 		return res.redirect('/');
 
-  res.render('notes', {token: JSON.stringify(req.session.oauthAccessToken), notes: null, data: null, monthNamesArray: null});
+	console.log('ya buraya?');
 
-};//end of exports.notes
+	if(selectedGuid && selectedGuid != 0) {
+		console.log('here');
+		utilityModule.getChartData(req.session.oauthAccessToken, selectedGuid, function (err, chartData) {
+			if (err) {
+				req.session.error = 'There is an error with the note you have selected. It might be not in the correct format. Please try again with another note';
+				console.log('fuck this shit bitch: ', err);
+			}
+			console.log('chart data: ', chartData);
+			res.writeHead(200, {'content-type': 'application/json'});
+			res.write(JSON.stringify(chartData));
+			res.end('\n');
+		});
+  }//end of if selectedGuid
+}
 
 // after login button pressed.
 // check the DB for the matching password.
@@ -102,7 +86,6 @@ exports.login = function(req, res) {
     if (err) console.log(err);
     else console.log("Successfully connected to MongoDB");
   });
-
 
   //testUser = new User({
   //email: 'cok1@ko.com',
@@ -157,7 +140,12 @@ exports.login = function(req, res) {
 // home page
 exports.index = function(req, res) {
   if(req.session.oauthAccessToken) {
-    console.log('connection already');
+		//we put the notelist in the session now.
+		/*req.session.noteList = null;
+		utilityModule.notesLoad(req.session.oauthAccessToken, function (err, noteList) {
+			if (err) req.session.error = err;
+			else req.session.noteList = noteList;
+		});*/
     res.redirect('/notes');
   } else {
     console.log('connection not ready');
@@ -272,6 +260,5 @@ exports.createUser = function(req,res) {
 // Clear session
 exports.clear = function(req, res) {
   req.session.destroy();
-	notes = null;
   res.redirect('/');
 };

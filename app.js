@@ -44,6 +44,7 @@ app.get('/oauth', routes.oauth);
 app.get('/oauth_callback', routes.oauth_callback);
 app.get('/clear', routes.clear);
 app.get('/notesLoad', routes.notesLoad);
+//app.get('/getChart', routes.getChart);
 //app.get('/newUser', function (req, res) {
 	//res.render('newUser');
 //}
@@ -63,11 +64,11 @@ app.post('/createUser', function (req, res) {
 	routes.createUser(req, res);
 });
 
-app.post('/notes', function (req, res) {
+app.post('/getChart', function (req, res) {
 	if (req.session.error){
 		req.session.error = null;
 	}
-	routes.notes(req, res);
+	routes.getChart(req, res);
 });
 
 // Run
