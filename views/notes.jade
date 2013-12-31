@@ -4,9 +4,6 @@ block content
   .content.section
     h2 Select a Note:
   
-    //mixin note_list(title, guid)
-      option(value="#{guid}") #{title}
-  
     -if (session.error)
       h2 Error
       p
@@ -15,10 +12,6 @@ block content
     .center
       form(action='/getChart', method='POST')
         select(name='select')
-          //+note_list("Selection", 0)
-          //if session.notes
-            //for note in session.notes
-              //+note_list(note.title, note.guid)
         input.input(type='button', name='action', value='submit')
   
     #bar
@@ -28,22 +21,23 @@ block scripts
   script(src='/js/libs/exporting.js')  
   script.
     $(document).ready(function() {
+      $('[name=select]').prop('disabled', true);
+      $('.input').prop('disabled', true);
       $.ajax('/notesLoad', {
         type: 'GET',
         dataType: 'json',
         success: function (data) {
-          /*alert(data);
-          alert(data.notes);*/
           var options='';
           $(data.notes).each( function() {
             $('[name=select]').append('<option value="' + this.guid + '">' + this.title + '</option> \n');;
           });
+          $('[name=select]').prop('disabled', false);
+          $('.input').prop('disabled', false);
         }
       });
       $(".input").click(function (event) {
         var selectedGuid = $('[name=select] :selected').val();
         $.post('/getChart', {'selectedGuid': selectedGuid}, function(data) {
-          alert('month names: ', JSON.stringify(data.monthNamesArray));
           var chart = new Highcharts.Chart({
             chart:   { zoomType: 'xy', renderTo: 'bar' },
             title:   { text: 'Work Done Per Month' },
@@ -83,76 +77,3 @@ block scripts
         });
       });    
     });
-  if workData
-    script(src='http://code.jquery.com/jquery-latest.min.js')
-    script(src='/js/libs/highcharts.js')
-    script(src='/js/libs/exporting.js')
-    script.
-      $('.input').click ( function () {
-        $.ajax('/getChart', {
-          type: 'POST',
-          dataType: 'json',
-          success: function (data) {
-            alert(data);
-            var chart = new Highcharts.Chart({
-              chart: {
-                zoomType: 'xy',
-                renderTo: 'bar'
-              },
-              title: {
-                text: 'Work Done Per Month'
-              },
-              subtile: {
-                text: 'Averages included'
-              },
-              xAxis: {
-                categories: data.monthNamesArray
-              },
-              yAxis: [{
-                title: {
-                  text: 'Number of Works Done',
-                  style: {
-                    color: '#4572A7'
-                  }
-                }
-                },{
-                title: {
-                  text: 'Average',
-                  style: {
-                    color: '#AA4643'
-                  }
-                },
-                opposite: true
-              }],
-              tooltip: {
-                shared: true
-              },
-              legend: {
-                layout: 'vertical',
-                align: 'left',
-                x: 40,
-                verticalAlign: 'top',
-                y: 40,
-                floating: true,
-                backgroundColor: '#FFFFFF'
-              },
-              series: [{
-                name: 'Number of Works Done',
-                color: '#4572A7',
-                type: 'column',
-                data: data.workData
-                },{
-                name: 'Average',
-                type: 'spline',
-                color: '#AA4643',
-                data: data.averageData,
-                marker: {
-                  enabled: false
-                },
-                dashStyle: 'shortdot'
-              }]
-            });
-          }
-        });
-      });    
-  

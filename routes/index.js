@@ -8,7 +8,6 @@ var config = require('../config.json'),
 		User = require('./user-model'),
 		selectedGuid,
 		chartData;
-//binPath = phantomjs.path;
 
 // checking the notes for tables, dates
 exports.notes = function(req,res) {
@@ -65,8 +64,7 @@ exports.getChart = function(req, res) {
 		console.log('here');
 		utilityModule.getChartData(req.session.oauthAccessToken, selectedGuid, function (err, chartData) {
 			if (err) {
-				req.session.error = 'There is an error with the note you have selected. It might be not in the correct format. Please try again with another note';
-				console.log('fuck this shit bitch: ', err);
+				req.session.error = err.message;
 			}
 			console.log('chart data: ', chartData);
 			res.writeHead(200, {'content-type': 'application/json'});
@@ -87,23 +85,7 @@ exports.login = function(req, res) {
     else console.log("Successfully connected to MongoDB");
   });
 
-  //testUser = new User({
-  //email: 'cok1@ko.com',
-  //password: 'Password123',
-  //oauthAccessToken: 'a',
-  //oauthAccessTokenSecret: 'a',
-  //edamShard: 'a',
-  //edamUserId: 'a',
-  //edamExpires: 'a',
-  //edamNoteStoreUrl: 'a',
-  //edamWebApiUrlPrefix: 'a'
-  //});
-
   // save user to database
-  //testUser.save(function(err) {
-  //if (err) throw err;
-  //// fetch user and test password verification
-  //var kanka = new User();
   User.findOne({ email: req.body.email }, function(err, user) {
     console.log('gut gut');
     if (err) console.log(err);
@@ -125,40 +107,20 @@ exports.login = function(req, res) {
       mongoose.connection.close();
       res.redirect('/');
     }
-    // test the entered password with the hash in the DB
-    //// test a failing password
-    //user.comparePassword('123Password', function(err, isMatch) {
-    ////if (err) throw err;
-    //console.log('123Password:', isMatch); // -&gt; 123Password: false
-    //});
   });
-  //});
-
-
 };
 
 // home page
 exports.index = function(req, res) {
   if(req.session.oauthAccessToken) {
-		//we put the notelist in the session now.
-		/*req.session.noteList = null;
-		utilityModule.notesLoad(req.session.oauthAccessToken, function (err, noteList) {
-			if (err) req.session.error = err;
-			else req.session.noteList = noteList;
-		});*/
     res.redirect('/notes');
   } else {
-    console.log('connection not ready');
-    //req.session.error =  null;
     res.render('index');
-    //res.redirect('notes');
-    //res.redirect('highcharts');
   }
 };
 
 // OAuth
 exports.oauth = function(req, res) {
-  console.log('hahahahaha');
   var client = new Evernote.Client({
     consumerKey: config.API_CONSUMER_KEY,
       consumerSecret: config.API_CONSUMER_SECRET,

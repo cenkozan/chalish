@@ -4,12 +4,6 @@ var express = require('express'),
 		http = require('http'),
 		path = require('path'),
 		app = express();
-		/*connect = require('connect'),
-		cookieParser = express.cookieParser('this is a secret cookie'),
-		sessionStore = new connect.middleware.session.MemoryStore(),
-		sio = require('socket.io'),
-		SessionSockets = require('session.socket.io'),
-		server, io, sockets = require('./routes/sockets');*/
 
 // Configurations
 app.configure(function(){
@@ -29,7 +23,6 @@ app.configure(function(){
 	});
 
 	app.use(app.router);
-	//app.use(require('less-middleware')({src: __dirname + '/public'}));
 	app.use(express.static(path.join(__dirname, 'public')));
 });
 
@@ -44,10 +37,6 @@ app.get('/oauth', routes.oauth);
 app.get('/oauth_callback', routes.oauth_callback);
 app.get('/clear', routes.clear);
 app.get('/notesLoad', routes.notesLoad);
-//app.get('/getChart', routes.getChart);
-//app.get('/newUser', function (req, res) {
-	//res.render('newUser');
-//}
 
 app.post('/login', function (req, res) {
 	console.log('what the heck');
@@ -75,7 +64,3 @@ app.post('/getChart', function (req, res) {
 http.createServer(app).listen(app.get('port'), function(){
 	console.log("Express server listening on port " + app.get('port'));
 });
-
-//io = sio.listen(server);
-//sessionSockets = new SessionSockets(io, sessionStore, cookieParser);
-//sockets.socketServer(server);
