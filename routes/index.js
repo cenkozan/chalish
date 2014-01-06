@@ -50,23 +50,16 @@ exports.getChart = function(req, res) {
 	if (req.session.error) 
 		req.session.error = null;
 
-	console.log('request: ', req.body);
 	selectedGuid = req.body.selectedGuid;
-
-	console.log('selected guid: ', selectedGuid);
 
 	if (!req.session.oauthAccessToken)
 		return res.redirect('/');
 
-	console.log('ya buraya?');
-
 	if(selectedGuid && selectedGuid != 0) {
-		console.log('here');
 		utilityModule.getChartData(req.session.oauthAccessToken, selectedGuid, function (err, chartData) {
 			if (err) {
 				req.session.error = err.message;
 			}
-			console.log('chart data: ', chartData);
 			res.writeHead(200, {'content-type': 'application/json'});
 			res.write(JSON.stringify(chartData));
 			res.end('\n');
@@ -77,7 +70,6 @@ exports.getChart = function(req, res) {
 // after login button pressed.
 // check the DB for the matching password.
 exports.login = function(req, res) {
-  console.log('hier hier');
   console.log(req.body.email);
 
   mongoose.connect(connStr, function(err) {
@@ -87,14 +79,11 @@ exports.login = function(req, res) {
 
   // save user to database
   User.findOne({ email: req.body.email }, function(err, user) {
-    console.log('gut gut');
     if (err) console.log(err);
 
-    console.log('is user instance of User?: ', user instanceof User);
     if (user instanceof User) {
       user.comparePassword(req.body.password, function(err, isMatch) {
         if (err) req.session.error = err;
-        console.log('User authenticated: ', user.email);
         //we set the session info back here.
         req.session.email = user.email;
         req.session.oauthAccessToken = user.oauthAccessToken;

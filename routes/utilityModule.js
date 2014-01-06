@@ -10,7 +10,7 @@ var	moment = require('moment'),
 		notes, token, client, sandbox, 
 		selectedGuid, dates, 
 		client, noteStore,
-		monthNamesArray = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+		monthNamesArray,
 		notes = [], sortFunction, numberOfWorksPerMonth,
 		note_filter, filter, offset, maxNotes,
 		resultSpec, totalNoteLength;
@@ -18,10 +18,10 @@ var	moment = require('moment'),
 // Returns data necessary for highcharts if note is appropriate
 // returns error if not 
 var getChartData = function (token, selectedGuid, toReturn) {
-	console.log('token: ', token);
-	console.log('selectedGuid', selectedGuid);
+	monthNamesArray = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 
+			'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];	
 	getNoteStore(token).getNoteContent(token, selectedGuid, function(error, noteContent){
-		if (error) console.log('fuck this shit: ', error);
+		if (error) return toReturn(error, null);
 		processXML(noteContent, function callback(err, dates) {
 			if (err){
 				return toReturn(err, null);
@@ -44,6 +44,16 @@ var getChartData = function (token, selectedGuid, toReturn) {
 						console.log('numberof works done per month= ', JSON.stringify(numberOfWorksPerMonth));
 						averages = calculateAverages(previousYearsAverage, numberOfWorksPerMonth);
 						console.log('averages: ', JSON.stringify(averages));
+
+
+						// Average array length: 13. First is 0 if there is no previous year data. 
+						// If it’s 0, take it out, if not, push Previous Average to the Month Names Array.
+						if (averages[0] === 0)
+							averages.shift();
+						else {
+							monthNamesArray.unshift('Previous Average');
+							numberOfWorksPerMonth.unshift(averages[0]);
+						}
 						toReturn(null, { monthNamesArray: monthNamesArray, workData: numberOfWorksPerMonth, averageData: averages } );
 					} 
 				});
@@ -54,15 +64,11 @@ var getChartData = function (token, selectedGuid, toReturn) {
 
 // an Evernote client for common use
 var getNoteStore = function (token) {
-	console.log('enter  here');
-	console.log(noteStore);
 	if (typeof noteStore !== 'object') {
-		console.log('enters here');
 		client = new Evernote.Client({ token: token, sandbox: config.SANDBOX});
 		return client.getNoteStore();
 	}
 	else {
-		console.log('no, enters here');
 		return noteStore;
 	}
 }
@@ -81,18 +87,12 @@ var notesLoad = function(token, toReturn) {
 
 	async.doWhilst(
 		function (callback) {
-			console.log('deneme');
-			console.log('offset: ', offset);
 			getNoteStore(token).findNotesMetadata (token,  filter, offset, maxNotes, resultSpec, function (error, returnedData) {
 				if (error) {
-					console.log('error: ', error);
 					toReturn(error, null);
 				}
 				totalNoteLength = returnedData.totalNotes;
 				offset = offset + returnedData.notes.length;
-				console.log('offset: ', offset);
-				console.log('totalNoteLength: ', totalNoteLength);
-				console.log('returnedData notes length: ', returnedData.notes.length);
 				function pushArray (element, index, array) {
 					notes.push(element);
 				}
@@ -120,8 +120,8 @@ var notesLoad = function(token, toReturn) {
 	);
 }
 
-//Extracts previous years' data, and return their average of work monthly. 
-// 1) Extract the dates that are different from this year.
+// Extracts previous years' data, and return their average of work monthly. 
+// 1) Extract the dates that are earlier than this year.
 // 2) Divident = Number of works finished before this year
 // 3) DividedBy = The number of months passed since the first date in the array
 var extractPreviousYearsAverage = function (dates, callback) {
@@ -138,7 +138,9 @@ var extractPreviousYearsAverage = function (dates, callback) {
 		});
 		yearDifference = moment().format('YYYY') - dates[0].EndDate.format('YYYY');
     console.log('yearDifference: ', yearDifference);
-		divider = yearDifference > 0 ? yearDifference * 12 + (12 - dates[0].EndDate.format('M')) : 12 - dates[0].EndDate.format('M');
+		// I am adding divider one because we don't want to find the difference of 
+		// months, but the count of the previous years' months.
+		divider = yearDifference > 1 ? (yearDifference - 1) * 12 + (12 - dates[0].EndDate.format('M') + 1) : 12 - dates[0].EndDate.format('M') + 1;
     console.log('divider: ',divider);
     console.log('previousYearsDates.length: ', previousYearsDates.length);
     console.log('previousYearsDates.length/divider: ', Math.floor(previousYearsDates.length/divider));
@@ -156,8 +158,9 @@ var extractPreviousYearsAverage = function (dates, callback) {
 //will be returned.
 var calculateAverages = function (previousYearsAverage, thisYearsData) {
   var toReturn = [];
+	toReturn.push(previousYearsAverage);
   thisYearsData.forEach(function (element) {
-    toReturn.push(Math.floor((previousYearsAverage + element)/2));
+    toReturn.push(Math.floor((toReturn[toReturn.length - 1] + element)/2));
   });
   return toReturn;
 }
@@ -184,13 +187,11 @@ var processXML = function (noteContent, callback) {
 	try {
 		var parsed, dates = [], tables = [], tableLen, tableChildTr, firstDateColumn, secondDateColumn, firstDateColumnFound = false, secondDateColumnFound = false, algorithmStart, fillDateArray; 
 		parsed = nodexmllite.parseString(noteContent);
-		//console.log(JSON.stringify(parsed));
 		//It used to get the LATEST TABle in the note.
 		//Changing it to run for every table in the note. 
 		// 12/26/2013
 		function checkEveryChild(data) {
 			if (data.name == 'table') {
-				//console.log(JSON.stringify(data));
 				tables.push(data);
 			}
 			else if (data.childs) {
@@ -204,10 +205,8 @@ var processXML = function (noteContent, callback) {
 		//for each of the table in the tables array.
 		//if the note has more than one table.
 		tableLen = tables.length;
-		console.log('tableLen is :', tableLen);
 		if (tableLen  > 0) {
 			for (var i =tableLen-1; i >= 0; i--) {
-				console.log('table[i]: ', i);
 				//Table is found. But the direct child of table doesn't start with <tr> necessarilly.
 				//So we have to check if the name of the child is tr in a while loop.
 				function checkTableChildIsTr(data) {
@@ -222,9 +221,7 @@ var processXML = function (noteContent, callback) {
 				//Check every column of the table for 
 				//two adjacent date columns.
 				if (tableChildTr) {
-					console.log('how many rows: ', tables[i].childs.length);
-					tables[i].childs.forEach( function (row, rowIndex) {
-						console.log('row index is equal to: ', rowIndex);
+					tableChildTr.childs.forEach( function (row, rowIndex) {
 						// Checking if the table has less than 2 columns.  2 columns are needed. 
 						// One is the Date Start, other is Date End Column.
 						if (row.childs.length < 2) {
@@ -237,9 +234,7 @@ var processXML = function (noteContent, callback) {
 						if (!algorithmStart) {
 							firstDateColumnFound = false;
 							//For each Column in the Table
-							console.log('row childs length: ', row.childs.length);
 							row.childs.every(function (columnData, columnIndex) {
-								console.log('column index is equal to: ', columnIndex);
 
 								if (!firstDateColumnFound) {
 									if (dateFound = checkColumnIfDate(columnData)) {
@@ -287,14 +282,12 @@ var processXML = function (noteContent, callback) {
 					});//end of forEach tables[i].childs (rows)
 				}//end of if tablechildtr
 			}//end of for tables
-			console.log('why EXIT SO FAST MOTHERFUCKER!!!!');
 		}
 		else {
 			throw new Error("There is no table in the note you have selected, please try again with another note.");
 		}
 		if (dates.length == 0)
 			throw new Error("Something wrong with the code. Date array is empty");
-		console.log('printing out dates array: ', JSON.stringify(dates));
 		callback(null, dates);
 	} catch (e) {
 		console.log(e.stack);
@@ -319,15 +312,11 @@ var checkColumnIfDate = function (columnData) {
 
 var returnIfDate = function (check) {
 	if (typeof check === 'string') {
-		//console.log('check data: ', check);
 		var date = moment(check.trim());
-		//console.log('date', date);
 		if (date && date.isValid()) {
-			//console.log('hell yeah');
 			return date;
 		}
 		else {
-			console.log('noooo');
 			return null;
 		}
 	}
@@ -336,8 +325,5 @@ var returnIfDate = function (check) {
 	}
 }
 
-module.exports.extractPreviousYearsAverage = extractPreviousYearsAverage;
-module.exports.monthsAndNumberOfWorksDone = monthsAndNumberOfWorksDone;
-module.exports.calculateAverages = calculateAverages;
 module.exports.notesLoad = notesLoad;
 module.exports.getChartData = getChartData;
