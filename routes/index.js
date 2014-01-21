@@ -59,9 +59,10 @@ exports.getChart = function(req, res) {
 		utilityModule.getChartData(req.session.oauthAccessToken, selectedGuid, function (err, chartData) {
 			if (err) {
 				req.session.error = err.message;
+				console.log('OOORRRROSPULAR!');
 			}
 			res.writeHead(200, {'content-type': 'application/json'});
-			res.write(JSON.stringify(chartData));
+			res.write(JSON.stringify(err.message, chartData));
 			res.end('\n');
 		});
   }//end of if selectedGuid
@@ -92,7 +93,7 @@ exports.login = function(req, res) {
       });
     }
     else {
-      req.session.error = "couldnt find the user";
+      req.session.error = "Couldn't find the user";
       mongoose.connection.close();
       res.redirect('/');
     }

@@ -26,13 +26,15 @@ html
               p Password
               input(type='password', name='password')
               input.input(type='submit', name='login', value='login')
-        -if (session.error)
-          .loginerror    
-            h2 Error
-              p
-                =session.error
-
+            -if (session.error)
+              .error
+                p Error: 
+                  =session.error
       block content
       block footer
       block scripts
-
+      script(src='http://code.jquery.com/jquery-latest.min.js')
+      script.
+        $('.error p').click(function(){
+          $('.error').hide(); // hide the overlay
+        });

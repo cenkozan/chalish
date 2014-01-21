@@ -3,17 +3,11 @@ extends layout
 block content
   .content.section
     h2 Select a Note:
-  
-    -if (session.error)
-      h2 Error
-      p
-        =session.error
-    
+
     .center
       form(action='/getChart', method='POST')
         select(name='select')
-        input.input(type='button', name='action', value='submit')
-  
+        input.input(type='button', name='action', value='Submit')
     #bar
 block scripts
   script(src='http://code.jquery.com/jquery-latest.min.js')
@@ -36,44 +30,58 @@ block scripts
         }
       });
       $(".input").click(function (event) {
+        //Disabling the controls
+        $('[name=select]').prop('disabled', true);
+        $('.input').prop('disabled', true);
+
         var selectedGuid = $('[name=select] :selected').val();
-        $.post('/getChart', {'selectedGuid': selectedGuid}, function(data) {
-          var chart = new Highcharts.Chart({
-            chart:   { zoomType: 'xy', renderTo: 'bar' },
-            title:   { text: 'Work Done Per Month' },
-            subtile: { text: 'Averages included' },
-            xAxis:   { categories: data.monthNamesArray },
-            yAxis: [{
-              title: {
-                text: 'Number of Works Done',
-                style: { color: '#4572A7' }
-              }
-              },{
-              title: {
-                text: 'Average',
-                style: { color: '#AA4643' }
+        $.post('/getChart', {'selectedGuid': selectedGuid}, function(err, data) {
+          $('[name=select]').prop('disabled', false);
+          $('.input').prop('disabled', false);
+          if (err) {
+            $('.center').append('<div class="error"> <p> Error: ' + err + '</p> </div>');
+            $('.error p').click(function(){
+              $('.error').hide(); // hide the overlay
+            });          
+          }
+          else {
+            var chart = new Highcharts.Chart({
+              chart:   { zoomType: 'xy', renderTo: 'bar' },
+              title:   { text: 'Work Done Per Month' },
+              subtile: { text: 'Averages included' },
+              xAxis:   { categories: data.monthNamesArray },
+              yAxis: [{
+                title: {
+                  text: 'Number of Works Done',
+                  style: { color: '#4572A7' }
+                }
+                },{
+                title: {
+                  text: 'Average',
+                  style: { color: '#AA4643' }
+                },
+                opposite: true
+              }],
+              tooltip: { shared: true },
+              legend: { layout: 'vertical', align: 'left', x: 40,
+                verticalAlign: 'top', y: 40, floating: true,
+                backgroundColor: '#FFFFFF'
               },
-              opposite: true
-            }],
-            tooltip: { shared: true },
-            legend: { layout: 'vertical', align: 'left', x: 40,
-              verticalAlign: 'top', y: 40, floating: true,
-              backgroundColor: '#FFFFFF'
-            },
-            series: [{
-              name: 'Number of Works Done',
-              color: '#4572A7',
-              type: 'column',
-              data: data.workData
-              },{
-              name: 'Average',
-              type: 'spline',
-              color: '#AA4643',
-              data: data.averageData,
-              marker: { enabled: false },
-              dashStyle: 'shortdot'
-            }]
-          });
+              series: [{
+                name: 'Number of Works Done',
+                color: '#4572A7',
+                type: 'column',
+                data: data.workData
+                },{
+                name: 'Average',
+                type: 'spline',
+                color: '#AA4643',
+                data: data.averageData,
+                marker: { enabled: false },
+                dashStyle: 'shortdot'
+              }]
+            });
+          }
         });
       });    
     });

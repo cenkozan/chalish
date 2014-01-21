@@ -183,6 +183,10 @@ p {
 
 /* $HEADER *****************/
 
+.header {
+	margin-bottom: 10%;
+}
+
 .logo {
 	float: left;
 }
@@ -209,7 +213,39 @@ p {
 }
 
 .right .input:last-child {
-	margin-bottom: 70%;
+}
+
+.error {
+	margin: 0 auto;
+	margin-top: 5%;
+	background-color: #DDDDDD;
+  border: 1px white solid;
+  border-radius: 10px;
+  position: relative;
+}
+
+.center .error {
+	width: 50%;
+}
+
+.error p{
+	margin: 5%;
+	font-size: 0.9em;
+	color: red;
+}
+
+.error p:after {
+	content: "\00D7";
+	color: black;
+	font-size: 1.75em;
+	font-weight: bold;
+	/*background-color: #757575;
+  border: 5px #3F3F3F solid;
+	*/
+  border-radius: 100%;
+  position: absolute;
+	right: -5px;
+	top: -10px;
 }
 
 /* $CONTENT *****************/
@@ -313,7 +349,6 @@ p {
   height: 100%;
   width: 6px;
   display: inline-block;
-  
   -webkit-animation: stretchdelay 1.2s infinite ease-in-out;
   animation: stretchdelay 1.2s infinite ease-in-out;
 }
@@ -359,6 +394,10 @@ p {
 	margin: 0 auto;
 	width: 50%;
 	text-align: center;
+}
+
+.center select {
+	width: 50%;
 }
 
 /* $FOOTER *****************/

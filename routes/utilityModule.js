@@ -284,13 +284,13 @@ var processXML = function (noteContent, callback) {
 			}//end of for tables
 		}
 		else {
-			throw new Error("There is no table in the note you have selected, please try again with another note.");
+			throw new Error("There is no table in the note you have selected, Please try again with another note.");
 		}
 		if (dates.length == 0)
-			throw new Error("Something wrong with the code. Date array is empty");
+			throw new Error("An Error occurred with the note you've selected. Please try again with another note.");
 		callback(null, dates);
 	} catch (e) {
-		console.log(e.stack);
+		//console.log(e.stack);
 		callback(e, null);
 	}
 }
