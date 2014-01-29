@@ -8,6 +8,12 @@ block content
       form(action='/getChart', method='POST')
         select(name='select')
         input.input(type='button', name='action', value='Submit')
+      .spinner
+        .rect1
+        .rect2
+        .rect3
+        .rect4
+        .rect5
     #bar
 block scripts
   script(src='http://code.jquery.com/jquery-latest.min.js')
@@ -23,33 +29,39 @@ block scripts
         success: function (data) {
           var options='';
           $(data.notes).each( function() {
-            $('[name=select]').append('<option value="' + this.guid + '">' + this.title + '</option> \n');;
+            $('[name=select]').append('<option value="' + this.guid + '">' + this.title + '</option> \n');
           });
           $('[name=select]').prop('disabled', false);
           $('.input').prop('disabled', false);
+          $('.spinner').hide();
         }
       });
       $(".input").click(function (event) {
         //Disabling the controls
         $('[name=select]').prop('disabled', true);
         $('.input').prop('disabled', true);
+        $('.spinner').show();
 
         var selectedGuid = $('[name=select] :selected').val();
-        $.post('/getChart', {'selectedGuid': selectedGuid}, function(err, data) {
+        $.post('/getChart', {'selectedGuid': selectedGuid}, function(data) {
           $('[name=select]').prop('disabled', false);
           $('.input').prop('disabled', false);
-          if (err) {
-            $('.center').append('<div class="error"> <p> Error: ' + err + '</p> </div>');
+          if (data.err) {
+            $('.error').remove();
+            $('.center').append('<div class="error"> <p> Error: ' + data.err + '</p> </div>');
             $('.error p').click(function(){
               $('.error').hide(); // hide the overlay
-            });          
+            });     
+            $('#bar').hide();
           }
-          else {
+          else{
+            $('.error').remove();
+            $('#bar').show();
             var chart = new Highcharts.Chart({
               chart:   { zoomType: 'xy', renderTo: 'bar' },
               title:   { text: 'Work Done Per Month' },
               subtile: { text: 'Averages included' },
-              xAxis:   { categories: data.monthNamesArray },
+              xAxis:   { categories: data.chartData.monthNamesArray },
               yAxis: [{
                 title: {
                   text: 'Number of Works Done',
@@ -71,17 +83,19 @@ block scripts
                 name: 'Number of Works Done',
                 color: '#4572A7',
                 type: 'column',
-                data: data.workData
+                data: data.chartData.workData
                 },{
                 name: 'Average',
                 type: 'spline',
                 color: '#AA4643',
-                data: data.averageData,
+                data: data.chartData.averageData,
                 marker: { enabled: false },
                 dashStyle: 'shortdot'
               }]
             });
           }
+          $('.spinner').hide();
+          $('html, body').animate({ scrollTop: $('div#bar')[0].scrollHeight }, 50);
         });
       });    
     });

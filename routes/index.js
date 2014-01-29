@@ -55,14 +55,25 @@ exports.getChart = function(req, res) {
 	if (!req.session.oauthAccessToken)
 		return res.redirect('/');
 
+	var json;
+
 	if(selectedGuid && selectedGuid != 0) {
 		utilityModule.getChartData(req.session.oauthAccessToken, selectedGuid, function (err, chartData) {
 			if (err) {
-				req.session.error = err.message;
+				json = JSON.stringify({error: err, chartData: null});
 				console.log('OOORRRROSPULAR!');
 			}
+			else {
+				console.log('chartdata: ', chartData);
+				json = JSON.stringify({error: null, chartData: chartData});
+				//res.writeHead(200, {'content-type': 'application/json'});
+				//var json = JSON.stringify({error: null, chartData: chartData});
+				//res.write(json);
+				//res.end('\n');
+			}
+			req.session.error = err;
 			res.writeHead(200, {'content-type': 'application/json'});
-			res.write(JSON.stringify(err.message, chartData));
+			res.write(json);
 			res.end('\n');
 		});
   }//end of if selectedGuid

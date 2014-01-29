@@ -337,7 +337,7 @@ p {
 /* SPINNER */
 
 .spinner {
-  margin: 100px auto;
+  margin: 5px auto;
   width: 50px;
   height: 30px;
   text-align: center;
@@ -347,8 +347,10 @@ p {
 .spinner > div {
   background-color: #333;
   height: 100%;
+	margin-right: 3px;
   width: 6px;
   display: inline-block;
+  
   -webkit-animation: stretchdelay 1.2s infinite ease-in-out;
   animation: stretchdelay 1.2s infinite ease-in-out;
 }
@@ -396,6 +398,9 @@ p {
 	text-align: center;
 }
 
+.center form {
+}
+
 .center select {
 	width: 50%;
 }
@@ -430,7 +435,6 @@ p {
 	.content .columns.eight .smaller {
 		width: 38%;
 	}
-
 	.formcreate {
 		width: 40%;
 	}
@@ -476,29 +480,23 @@ p {
 	.content .columns.eight .smaller {
 		width: 50%;
 	}
-	
 	.content .columns.four {
 		width: 50%;
 		margin-bottom: 5%;
 	}
-
 	.content .columns.four .smaller {
 		width: 50%;
 	}
-
 }
 
 @media only screen and (max-width: 620px) {
-	.content.section h1 {
 	h1 {
 		font-size: 2em;
 	}
-
 	h2, h3 {
 		font-size: 1.6em;
 		text-transform: inherit;
 	}
-
 	p {
 		font-size: 1em;
 	}
