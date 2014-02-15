@@ -6,22 +6,28 @@ block content
 
     .center
       form(action='/getChart', method='POST')
-        select(name='select')
-        input.input(type='button', name='action', value='Submit')
+        select.chosen
+        input.input(type='button', name='action', value='Get Chart')
+        input.input(type='button', name='addToList', value='Add to My List')
       .spinner
         .rect1
         .rect2
         .rect3
         .rect4
         .rect5
+    .noteList
+      p= session.noteList
+      each note in session.noteList
+        p= note.name
     #bar
 block scripts
   script(src='http://code.jquery.com/jquery-latest.min.js')
   script(src='/js/libs/highcharts.js')
-  script(src='/js/libs/exporting.js')  
+  script(src='/js/libs/exporting.js')
+  script(src='/js/libs/chosen.jquery.min.js')
   script.
     $(document).ready(function() {
-      $('[name=select]').prop('disabled', true);
+      $('.chosen').prop('disabled', true);
       $('.input').prop('disabled', true);
       $.ajax('/notesLoad', {
         type: 'GET',
@@ -29,30 +35,40 @@ block scripts
         success: function (data) {
           var options='';
           $(data.notes).each( function() {
-            $('[name=select]').append('<option value="' + this.guid + '">' + this.title + '</option> \n');
+            $('.chosen').append('<option value="' + this.guid + '">' + this.title + '</option> \n');
           });
-          $('[name=select]').prop('disabled', false);
+          $('.chosen').prop('disabled', false);
+          $('.chosen').chosen();
           $('.input').prop('disabled', false);
           $('.spinner').hide();
         }
       });
-      $(".input").click(function (event) {
+      $('[name=addToList]').click(function (event) {
+        var selectedGuid = $('.chosen :selected').val(), selectedName = $('.chosen :selected').text();
+        $.post('/addNoteToList', {'selectedGuid': selectedGuid, 'selectedName': selectedName}, function(data) {
+          alert('success');
+        });
+      });
+      $('[name=action]').click(function (event) {
         //Disabling the controls
-        $('[name=select]').prop('disabled', true);
+        $('.chosen').prop('disabled', true);
         $('.input').prop('disabled', true);
         $('.spinner').show();
 
-        var selectedGuid = $('[name=select] :selected').val();
+        var selectedGuid = $('.chosen :selected').val();
+        var selectedName = $('.chosen :selected').text();
+
         $.post('/getChart', {'selectedGuid': selectedGuid}, function(data) {
-          $('[name=select]').prop('disabled', false);
-          $('.input').prop('disabled', false);
-          if (data.err) {
+          if (data.error) {
             $('.error').remove();
-            $('.center').append('<div class="error"> <p> Error: ' + data.err + '</p> </div>');
+            $('.center').append('<div class="error"> <p> Error: ' + data.error + '</p> </div>');
             $('.error p').click(function(){
               $('.error').hide(); // hide the overlay
             });     
             $('#bar').hide();
+            $('.chosen').prop('disabled', false);
+            $('.input').prop('disabled', false);
+            $('[name=addToList]').hide();
           }
           else{
             $('.error').remove();
@@ -93,6 +109,9 @@ block scripts
                 dashStyle: 'shortdot'
               }]
             });
+            $('[name=addToList]').show();
+            $('.chosen').prop('disabled', false);
+            $('.input').prop('disabled', false);
           }
           $('.spinner').hide();
           $('html, body').animate({ scrollTop: $('div#bar')[0].scrollHeight }, 50);

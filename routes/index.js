@@ -6,7 +6,9 @@ var config = require('../config.json'),
 		mongoose = require('mongoose'),
 		connStr = process.env.MONGOLAB_URI || process.env.MONGOHQ_URL || "mongodb://127.0.0.1:27017/chalish-user-table",
 		User = require('./user-model'),
+		currentUser,
 		selectedGuid,
+		selectedName,
 		chartData;
 
 // checking the notes for tables, dates
@@ -45,6 +47,27 @@ exports.notesLoad = function(req, res) {
 	}
 }
 
+exports.addNoteToList = function(req, res) {
+
+	selectedGuid = req.body.selectedGuid;
+	selectedName = req.body.selectedName;
+
+	console.log(selectedGuid);
+	console.log(selectedName);
+	console.log(currentUser);
+	currentUser.noteList.push( {guid: selectedGuid, name: selectedName} );
+	req.session.noteList.push( {guid: selectedGuid, name: selectedName} );
+	console.log(req.session.noteList);
+	console.log(currentUser);
+	console.log(mongoose);
+
+  currentUser.save(function(err) {
+		console.log('jejfda');
+    if (err) console.log(err);
+    else	console.log('User\'s note list succesfully saved.');
+  });
+}
+
 exports.getChart = function(req, res) {
 
 	if (req.session.error) 
@@ -59,8 +82,10 @@ exports.getChart = function(req, res) {
 
 	if(selectedGuid && selectedGuid != 0) {
 		utilityModule.getChartData(req.session.oauthAccessToken, selectedGuid, function (err, chartData) {
+			console.log('error var uleyn: ', err);
 			if (err) {
-				json = JSON.stringify({error: err, chartData: null});
+				req.session.error = err.message;
+				json = JSON.stringify({error: err.message, chartData: null});
 				console.log('OOORRRROSPULAR!');
 			}
 			else {
@@ -71,7 +96,6 @@ exports.getChart = function(req, res) {
 				//res.write(json);
 				//res.end('\n');
 			}
-			req.session.error = err;
 			res.writeHead(200, {'content-type': 'application/json'});
 			res.write(json);
 			res.end('\n');
@@ -81,6 +105,7 @@ exports.getChart = function(req, res) {
 
 // after login button pressed.
 // check the DB for the matching password.
+// save email, oauthAccessToken, and noteList to the session.
 exports.login = function(req, res) {
   console.log(req.body.email);
 
@@ -89,16 +114,20 @@ exports.login = function(req, res) {
     else console.log("Successfully connected to MongoDB");
   });
 
-  // save user to database
+  // find user in database
   User.findOne({ email: req.body.email }, function(err, user) {
     if (err) console.log(err);
 
     if (user instanceof User) {
       user.comparePassword(req.body.password, function(err, isMatch) {
         if (err) req.session.error = err;
+				//since this is the correct user, let's hold his data,
+				//this is for saving his note List.
+				currentUser = user;
         //we set the session info back here.
         req.session.email = user.email;
         req.session.oauthAccessToken = user.oauthAccessToken;
+				req.session.noteList = user.noteList;
         mongoose.connection.close();
         res.redirect('/');
       });
@@ -192,7 +221,6 @@ exports.createUser = function(req,res) {
 
   var newUser;
 
-
   mongoose.connect(connStr, function(err) {
     if (err) console.log(err);
     else console.log("Successfully connected to MongoDB");
@@ -218,7 +246,7 @@ exports.createUser = function(req,res) {
     else	console.log('Account Creation Successful');
   });
   res.redirect('/notes');
-};
+}
 
 // Clear session
 exports.clear = function(req, res) {

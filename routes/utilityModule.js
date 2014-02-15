@@ -36,8 +36,8 @@ var getChartData = function (token, selectedGuid, toReturn) {
 				//Average array starts with the average
 				//Pushes to the view too as another Axis.
 				extractPreviousYearsAverage(dates, function callback(error, previousYearsAverage, thisYearsData) {
-					if (err){
-						toReturn(err, null);
+					if (error){
+						toReturn(error, null);
 					}
 					else {
 						numberOfWorksPerMonth = monthsAndNumberOfWorksDone(thisYearsData, monthNamesArray);
@@ -54,6 +54,7 @@ var getChartData = function (token, selectedGuid, toReturn) {
 							monthNamesArray.unshift('Previous Average');
 							numberOfWorksPerMonth.unshift(averages[0]);
 						}
+						console.log('toReturn cagiriliyor');
 						toReturn(null, { monthNamesArray: monthNamesArray, workData: numberOfWorksPerMonth, averageData: averages } );
 					} 
 				});

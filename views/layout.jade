@@ -5,6 +5,7 @@ html
     link(href='http://fonts.googleapis.com/css?family=Open+Sans+Condensed:300', rel='stylesheet', type='text/css')
     link(href='http://fonts.googleapis.com/css?family=Condiment', rel='stylesheet', type='text/css')
     link(rel='stylesheet', href='/stylesheets/style.css')
+    link(rel='stylesheet', href='/stylesheets/chosen.min.css')
   body
     link(rel="shortcut icon", href="/images/favicon.ico") 
     .wrapper
@@ -33,8 +34,8 @@ html
       block content
       block footer
       block scripts
-      script(src='http://code.jquery.com/jquery-latest.min.js')
-      script.
-        $('.error p').click(function(){
-          $('.error').hide(); // hide the overlay
-        });
+        script(src='http://code.jquery.com/jquery-latest.min.js')
+        script.
+          $('.error p').click(function(){
+            $('.error').hide(); // hide the overlay
+          });

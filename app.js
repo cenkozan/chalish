@@ -46,6 +46,13 @@ app.post('/login', function (req, res) {
 	routes.login(req, res);
 });
 
+app.post('/addNoteToList', function (req, res) {
+	if (req.session.error){
+		req.session.error = null;
+	}
+	routes.addNoteToList(req, res);
+});
+
 app.post('/createUser', function (req, res) {
 	if (req.session.error){
 		req.session.error = null;

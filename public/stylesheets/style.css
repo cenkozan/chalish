@@ -310,12 +310,6 @@ p {
 	color: #0000EE;
 }
 
-#bar {
-  min-width: 66%;
-  height: 66%;
-  margin: 0 auto;
-}
-
 /*create user form */
 .formcreate {
 	margin: 0 auto;
@@ -401,8 +395,26 @@ p {
 .center form {
 }
 
-.center select {
+.center .chosen {
 	width: 50%;
+}
+
+.center [name=addToList] {
+	display: none;
+}
+
+.noteList {
+	width: 33%;
+}
+
+#bar {
+	float: right;
+  width: 66%;
+  height: 66%;
+  margin: 0 auto;
+	margin-right: 10px;
+	margin-bottom: 10px;
+	float: right;
 }
 
 /* $FOOTER *****************/
