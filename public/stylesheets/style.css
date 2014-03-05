@@ -1,3 +1,17 @@
+/* INDEX */
+/* GRID */
+/* REAL STYLING */
+/* $HEADER */
+/* ERROR */
+/* $CONTENT */
+/* SPINNER */
+/* NOTES.JADE */
+/* NOTE LIST */
+/* $FOOTER */
+/* $MEDIAQUERIES */
+
+
+
 /*HTML5 RESET LAST */
 
 html, body, div, span, applet, object, iframe,
@@ -162,7 +176,7 @@ h1, h2, h3 {
 }
 
 p {
-	font: serif;
+	font-family: 'PT Serif';
 }
 
 h1 {
@@ -181,7 +195,7 @@ p {
 	font-size: 1.36em;
 }
 
-/* $HEADER *****************/
+/* $HEADER */
 
 .header {
 	margin-bottom: 10%;
@@ -214,6 +228,8 @@ p {
 
 .right .input:last-child {
 }
+
+/* ERROR */
 
 .error {
 	margin: 0 auto;
@@ -248,7 +264,7 @@ p {
 	top: -10px;
 }
 
-/* $CONTENT *****************/
+/* $CONTENT */
 
 .content {
 	margin: 0 auto;
@@ -269,7 +285,7 @@ p {
 }
 
 .content.section p {
-	font-family: serif;
+	font-family: 'PT Serif';
 }
 
 .reddit {
@@ -403,10 +419,6 @@ p {
 	display: none;
 }
 
-.noteList {
-	width: 33%;
-}
-
 #bar {
 	float: right;
   width: 66%;
@@ -417,7 +429,37 @@ p {
 	float: right;
 }
 
-/* $FOOTER *****************/
+/* NOTE LIST */
+.noteList {
+	width: 33%;
+	float: left;
+}
+
+.noteList p {
+	margin-bottom: 10px;
+}
+
+.noteList a:nth-child(odd):after {
+	content:"\a";
+	white-space: pre;
+	margin-bottom: 6px;
+}
+
+.noteList a {
+	display: inline;
+}
+
+.noteList a.del {
+	text-decoration: none;gTgT
+}
+.noteList a.del:before {
+	content: "\00D7";
+	color: red;
+	font-size: 1.5em;
+	font-weight: bold;
+}
+
+/* $FOOTER */
 
 .footer {
 }
@@ -435,7 +477,7 @@ p {
 	float: right;
 }
 
-/* $MEDIAQUERIES *****************/
+/* $MEDIAQUERIES*/
 
 @media only screen and (max-width: 1300px) {
 	.content .columns.eight .smaller {

@@ -16,9 +16,13 @@ block content
         .rect4
         .rect5
     .noteList
-      p= session.noteList
-      each note in session.noteList
-        p= note.name
+      -if (session.noteList)
+        p Number of notes:
+          =session.noteList.length
+        each note in session.noteList
+          a.del(href='/#', onclick='removeNote("' + note.guid + '");return false;') 
+          a.notename(href='/#') 
+            =note.name
     #bar
 block scripts
   script(src='http://code.jquery.com/jquery-latest.min.js')
@@ -26,7 +30,35 @@ block scripts
   script(src='/js/libs/exporting.js')
   script(src='/js/libs/chosen.jquery.min.js')
   script.
+    function removeNote(id) {
+      $.ajax('/removeNote', {
+        type: 'GET',
+        dataType: 'json',
+        success: function (data) {
+          $('.noteList').remove();
+          $('#bar').before('<div class="noteList"></div>');
+          $('.noteList').append('<p>Number of notes: ' + data.noteList.length + '</p>');
+          $(data.noteList).each( function() {
+            var e = $("<a />", {
+              href: "/#",
+              onclick: "removeNote('" + this.guid + "');return false;",
+              title: "kochero"
+            });
+            e.append("kochero")
+            $('.noteList').append(e);
+            $('.noteList').append('<a href="/#">' + this.name + '</a>');
+          });
+        }
+      });
+    }
     $(document).ready(function() {
+      $('.chosen').change(function() {
+        $('[name=addToList]').prop('disabled', true);
+      });
+      $('#del').click(function() {
+        alert($(this).attr("specialId"));
+        return false;
+      });
       $('.chosen').prop('disabled', true);
       $('.input').prop('disabled', true);
       $.ajax('/notesLoad', {
@@ -46,7 +78,28 @@ block scripts
       $('[name=addToList]').click(function (event) {
         var selectedGuid = $('.chosen :selected').val(), selectedName = $('.chosen :selected').text();
         $.post('/addNoteToList', {'selectedGuid': selectedGuid, 'selectedName': selectedName}, function(data) {
-          alert('success');
+          if (data.error) {
+            $('.error').remove();
+            $('.center').append('<div class="error"> <p> Error: ' + data.error + '</p> </div>');
+            $('.error p').click(function(){
+              $('.error').hide(); // hide the overlay
+            });
+          }
+          else{
+            $('.noteList').remove();
+            $('#bar').before('<div class="noteList"></div>');
+            $('.noteList').append('<p>Number of notes: ' + data.noteList.length + '</p>');
+            $(data.noteList).each( function() {
+              var e = $("<a />", {
+                href: "/#",
+                onclick: "removeNote('" + this.guid + "');return false;",
+                title: "kochero"
+              });
+              e.append("kochero")
+              $('.noteList').append(e);
+              $('.noteList').append('<a href="/#">' + this.name + '</a>');
+            });
+          }
         });
       });
       $('[name=action]').click(function (event) {
@@ -54,17 +107,15 @@ block scripts
         $('.chosen').prop('disabled', true);
         $('.input').prop('disabled', true);
         $('.spinner').show();
-
         var selectedGuid = $('.chosen :selected').val();
         var selectedName = $('.chosen :selected').text();
-
         $.post('/getChart', {'selectedGuid': selectedGuid}, function(data) {
           if (data.error) {
             $('.error').remove();
             $('.center').append('<div class="error"> <p> Error: ' + data.error + '</p> </div>');
             $('.error p').click(function(){
               $('.error').hide(); // hide the overlay
-            });     
+            });
             $('#bar').hide();
             $('.chosen').prop('disabled', false);
             $('.input').prop('disabled', false);

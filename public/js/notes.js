@@ -1,93 +1,109 @@
 $(document).ready(function() {
-  function checkVariable() {
-    if(session.noteList){
-      var options;
-      alert(noteList.length);
-      alert(data.notes[452].title);
-      data.notes.each(function() {
-        alert(this);
-      });
-      for (var i = 0; i < data.notes.length; i++) {
-        alert('i: ', i);
-        options.append($("<option />").val(data.notes[i].guid).text(data.notes[i].title));
-        alert(options);
-        $(".select").append(options);
-      }
-    }
+  $('#del').click(function() {
+    alert($(this).attr("specialId"));
+    return false;
+  });
+  function deldata() {
+    alert('ibne tayyip');
   }
-  setTimeout("checkVariable()",1000);
-  
-/*  $.ajax('/notesLoad', {
+  $('.chosen').prop('disabled', true);
+  $('.input').prop('disabled', true);
+  $.ajax('/notesLoad', {
     type: 'GET',
     dataType: 'json',
-    success: function(data) {
+    success: function (data) {
+      var options='';
+      $(data.notes).each( function() {
+        $('.chosen').append('<option value="' + this.guid + '">' + this.title + '</option> \n');
+      });
+      $('.chosen').prop('disabled', false);
+      $('.chosen').chosen();
+      $('.input').prop('disabled', false);
+      $('.spinner').hide();
     }
-  });*/
-});
+  });
+  $('[name=addToList]').click(function (event) {
+    var selectedGuid = $('.chosen :selected').val(), selectedName = $('.chosen :selected').text();
+    $.post('/addNoteToList', {'selectedGuid': selectedGuid, 'selectedName': selectedName}, function(data) {
+      if (data.error) {
+        $('.error').remove();
+        $('.center').append('<div class="error"> <p> Error: ' + data.error + '</p> </div>');
+        $('.error p').click(function(){
+          $('.error').hide(); // hide the overlay
+        });
+      }
+      else{
+        alert('success');
+      }
+    });
+  });
+  $('[name=action]').click(function (event) {
+    //Disabling the controls
+    $('.chosen').prop('disabled', true);
+    $('.input').prop('disabled', true);
+    $('.spinner').show();
 
-if (workData) {
-  $.getScript('/libs/highcharts.js', function(){
-    $.getScript('/libs/exporting.js', function(){
-      $(document).ready(function() {
+    var selectedGuid = $('.chosen :selected').val();
+    var selectedName = $('.chosen :selected').text();
+
+    $.post('/getChart', {'selectedGuid': selectedGuid}, function(data) {
+      if (data.error) {
+        $('.error').remove();
+        $('.center').append('<div class="error"> <p> Error: ' + data.error + '</p> </div>');
+        $('.error p').click(function(){
+          $('.error').hide(); // hide the overlay
+        });
+        $('#bar').hide();
+        $('.chosen').prop('disabled', false);
+        $('.input').prop('disabled', false);
+        $('[name=addToList]').hide();
+      }
+      else{
+        $('.error').remove();
+        $('#bar').show();
         var chart = new Highcharts.Chart({
-          chart: {
-            zoomType: 'xy',
-            renderTo: 'bar'
-          },
-          title: {
-            text: 'Work Done Per Month'
-          },
-          subtile: {
-            text: 'Averages included'
-          },
-          xAxis: {
-            categories: monthNamesArray
-          },
+          chart:   { zoomType: 'xy', renderTo: 'bar' },
+          title:   { text: 'Work Done Per Month' },
+          subtile: { text: 'Averages included' },
+          xAxis:   { categories: data.chartData.monthNamesArray },
           yAxis: [{
             title: {
               text: 'Number of Works Done',
-              style: {
-                color: '#4572A7'
-              }
+              style: { color: '#4572A7' }
             }
             },{
             title: {
               text: 'Average',
-              style: {
-                color: '#AA4643'
-              }
+              style: { color: '#AA4643' }
             },
             opposite: true
           }],
-          tooltip: {
-            shared: true
-          },
-          legend: {
-            layout: 'vertical',
-            align: 'left',
-            x: 40,
-            verticalAlign: 'top',
-            y: 40,
-            floating: true,
+          tooltip: { shared: true },
+          legend: { layout: 'vertical', align: 'left', x: 40,
+            verticalAlign: 'top', y: 40, floating: true,
             backgroundColor: '#FFFFFF'
           },
           series: [{
             name: 'Number of Works Done',
             color: '#4572A7',
             type: 'column',
-            data:workData
+            data: data.chartData.workData
             },{
             name: 'Average',
             type: 'spline',
             color: '#AA4643',
-            data:averageData,
-            marker: {
-              enabled: false
-            },
+            data: data.chartData.averageData,
+            marker: { enabled: false },
             dashStyle: 'shortdot'
           }]
         });
-      });
+        $('[name=addToList]').show();
+        $('.chosen').prop('disabled', false);
+        $('.input').prop('disabled', false);
+      }
+      $('.spinner').hide();
+      $('html, body').animate({ scrollTop: $('div#bar')[0].scrollHeight }, 50);
     });
-  });
-}
+  });    
+});
+

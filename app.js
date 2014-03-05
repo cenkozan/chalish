@@ -37,6 +37,7 @@ app.get('/oauth', routes.oauth);
 app.get('/oauth_callback', routes.oauth_callback);
 app.get('/clear', routes.clear);
 app.get('/notesLoad', routes.notesLoad);
+app.get('/removeNote', routes.removeNote);
 
 app.post('/login', function (req, res) {
 	console.log('what the heck');
