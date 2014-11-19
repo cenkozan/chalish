@@ -9,19 +9,20 @@ block content
         select.chosen
         input.input(type='button', name='action', value='Get Chart')
         input.input(type='button', name='addToList', value='Add to My List')
-      .spinner
-        .rect1
-        .rect2
-        .rect3
-        .rect4
-        .rect5
+      .overdraw
+        .spinner
+          .rect1
+          .rect2
+          .rect3
+          .rect4
+          .rect5
     .noteList
       -if (session.noteList)
         p Number of notes:
           =session.noteList.length
         each note in session.noteList
           a.del(href='/#', onclick='removeNote("' + note.guid + '");return false;') 
-          a.notename(href='/#') 
+          a.notename(href='/#', data-guid=note.guid)
             =note.name
     #bar
 block scripts
@@ -29,143 +30,4 @@ block scripts
   script(src='/js/libs/highcharts.js')
   script(src='/js/libs/exporting.js')
   script(src='/js/libs/chosen.jquery.min.js')
-  script.
-    function removeNote(id) {
-      $.ajax('/removeNote', {
-        type: 'GET',
-        dataType: 'json',
-        success: function (data) {
-          $('.noteList').remove();
-          $('#bar').before('<div class="noteList"></div>');
-          $('.noteList').append('<p>Number of notes: ' + data.noteList.length + '</p>');
-          $(data.noteList).each( function() {
-            var e = $("<a />", {
-              href: "/#",
-              onclick: "removeNote('" + this.guid + "');return false;",
-              title: "kochero"
-            });
-            e.append("kochero")
-            $('.noteList').append(e);
-            $('.noteList').append('<a href="/#">' + this.name + '</a>');
-          });
-        }
-      });
-    }
-    $(document).ready(function() {
-      $('.chosen').change(function() {
-        $('[name=addToList]').prop('disabled', true);
-      });
-      $('#del').click(function() {
-        alert($(this).attr("specialId"));
-        return false;
-      });
-      $('.chosen').prop('disabled', true);
-      $('.input').prop('disabled', true);
-      $.ajax('/notesLoad', {
-        type: 'GET',
-        dataType: 'json',
-        success: function (data) {
-          var options='';
-          $(data.notes).each( function() {
-            $('.chosen').append('<option value="' + this.guid + '">' + this.title + '</option> \n');
-          });
-          $('.chosen').prop('disabled', false);
-          $('.chosen').chosen();
-          $('.input').prop('disabled', false);
-          $('.spinner').hide();
-        }
-      });
-      $('[name=addToList]').click(function (event) {
-        var selectedGuid = $('.chosen :selected').val(), selectedName = $('.chosen :selected').text();
-        $.post('/addNoteToList', {'selectedGuid': selectedGuid, 'selectedName': selectedName}, function(data) {
-          if (data.error) {
-            $('.error').remove();
-            $('.center').append('<div class="error"> <p> Error: ' + data.error + '</p> </div>');
-            $('.error p').click(function(){
-              $('.error').hide(); // hide the overlay
-            });
-          }
-          else{
-            $('.noteList').remove();
-            $('#bar').before('<div class="noteList"></div>');
-            $('.noteList').append('<p>Number of notes: ' + data.noteList.length + '</p>');
-            $(data.noteList).each( function() {
-              var e = $("<a />", {
-                href: "/#",
-                onclick: "removeNote('" + this.guid + "');return false;",
-                title: "kochero"
-              });
-              e.append("kochero")
-              $('.noteList').append(e);
-              $('.noteList').append('<a href="/#">' + this.name + '</a>');
-            });
-          }
-        });
-      });
-      $('[name=action]').click(function (event) {
-        //Disabling the controls
-        $('.chosen').prop('disabled', true);
-        $('.input').prop('disabled', true);
-        $('.spinner').show();
-        var selectedGuid = $('.chosen :selected').val();
-        var selectedName = $('.chosen :selected').text();
-        $.post('/getChart', {'selectedGuid': selectedGuid}, function(data) {
-          if (data.error) {
-            $('.error').remove();
-            $('.center').append('<div class="error"> <p> Error: ' + data.error + '</p> </div>');
-            $('.error p').click(function(){
-              $('.error').hide(); // hide the overlay
-            });
-            $('#bar').hide();
-            $('.chosen').prop('disabled', false);
-            $('.input').prop('disabled', false);
-            $('[name=addToList]').hide();
-          }
-          else{
-            $('.error').remove();
-            $('#bar').show();
-            var chart = new Highcharts.Chart({
-              chart:   { zoomType: 'xy', renderTo: 'bar' },
-              title:   { text: 'Work Done Per Month' },
-              subtile: { text: 'Averages included' },
-              xAxis:   { categories: data.chartData.monthNamesArray },
-              yAxis: [{
-                title: {
-                  text: 'Number of Works Done',
-                  style: { color: '#4572A7' }
-                }
-                },{
-                title: {
-                  text: 'Average',
-                  style: { color: '#AA4643' }
-                },
-                opposite: true
-              }],
-              tooltip: { shared: true },
-              legend: { layout: 'vertical', align: 'left', x: 40,
-                verticalAlign: 'top', y: 40, floating: true,
-                backgroundColor: '#FFFFFF'
-              },
-              series: [{
-                name: 'Number of Works Done',
-                color: '#4572A7',
-                type: 'column',
-                data: data.chartData.workData
-                },{
-                name: 'Average',
-                type: 'spline',
-                color: '#AA4643',
-                data: data.chartData.averageData,
-                marker: { enabled: false },
-                dashStyle: 'shortdot'
-              }]
-            });
-            $('[name=addToList]').show();
-            $('.chosen').prop('disabled', false);
-            $('.input').prop('disabled', false);
-          }
-          $('.spinner').hide();
-          $('html, body').animate({ scrollTop: $('div#bar')[0].scrollHeight }, 50);
-        });
-      });    
-    });
+  script(src='/js/notes.js')

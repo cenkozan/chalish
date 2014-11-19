@@ -18,3 +18,8 @@ block content
         .row
           .columns.sixteen
             input(type='submit', name='createUser', value='Create User')
+      .clearfix
+      -if (session.error)
+        .error
+          p Error: 
+            =session.error

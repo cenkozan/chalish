@@ -1,49 +1,55 @@
 // Module dependencies and Variables
-var express = require('express'),
-		routes = require('./routes'),
+var 
+		express = require('express'),
+		app = express(),
+		bodyParser = require('body-parser'),
+		cookieParser = require('cookie-parser'),
+		config = require('./config.json'),
+		errorhandler = require('errorhandler'),
+		favicon = require('serve-favicon'),
 		http = require('http'),
+		morgan = require('morgan'),
 		path = require('path'),
-		app = express();
+		routes = require('./routes'),
+		session = require('express-session');
 
 // Configurations
-app.configure(function(){
-	app.set('port', process.env.PORT || 3000);
-	app.set('views', __dirname + '/views');
-	app.set('view engine', 'jade');
-	app.use(express.favicon());
-	app.use(express.logger('dev'));
-	app.use(express.bodyParser());
+app.set('views', __dirname + '/views');
+app.set('view engine', 'jade');
+app.use(favicon('./public/images/favicon.ico'));
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
 
-	app.use(express.methodOverride());
-	app.use(express.cookieParser('this is a secret cookie'));
-	app.use(express.session());
-	app.use(function(req, res, next) {
-		res.locals.session = req.session;
-		next();
-	});
 
-	app.use(app.router);
-	app.use(express.static(path.join(__dirname, 'public')));
+//app.use(express.methodOverride());
+app.use(cookieParser('chalish secret cookie'));
+app.use(session({secret: 'chalish secret session', resave:true, saveUninitialized:true}));
+app.use(function(req,res,next){
+    res.locals.session = req.session;
+    next();
 });
 
-app.configure('development', function(){
-	app.use(express.errorHandler());
-});
+app.use(express.static(path.join(__dirname, 'public')));
+
+if (process.env.NODE_ENV === 'development') {	
+	app.use(morgan('dev'));
+}
 
 // Routes
 app.get('/', routes.index);
 app.get('/notes', routes.notes);
 app.get('/oauth', routes.oauth);
 app.get('/oauth_callback', routes.oauth_callback);
+app.get('/newUser', routes.newUser);
 app.get('/clear', routes.clear);
 app.get('/notesLoad', routes.notesLoad);
 app.get('/removeNote', routes.removeNote);
 
 app.post('/login', function (req, res) {
-	console.log('what the heck');
 	if (req.session.error){
 		req.session.error = null;
 	}
+	console.log('email: ', req.body.email);
 	routes.login(req, res);
 });
 
@@ -68,7 +74,13 @@ app.post('/getChart', function (req, res) {
 	routes.getChart(req, res);
 });
 
-// Run
-http.createServer(app).listen(app.get('port'), function(){
-	console.log("Express server listening on port " + app.get('port'));
+app.use(errorhandler());
+
+app.listen(config.port, function() {
+	console.log("Express server listening on port " + config.port);
 });
+
+// Run
+//http.createServer(app).listen(app.get('port'), function(){
+	//console.log("Express server listening on port " + app.get('port'));
+//});

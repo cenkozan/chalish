@@ -1,4 +1,4 @@
-doctype 5
+doctype html
 html
   head
     title Chalish
@@ -36,6 +36,6 @@ html
       block scripts
         script(src='http://code.jquery.com/jquery-latest.min.js')
         script.
-          $('.error p').click(function(){
-            $('.error').hide(); // hide the overlay
-          });
+          var item = $('<span>X</span>');
+          item.click(function() { $('.error').hide(); });
+          $('.error').append(item);

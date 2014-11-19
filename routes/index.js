@@ -1,27 +1,28 @@
 var Evernote = require('evernote').Evernote,
 		config = require('../config.json'), 
 		callbackUrl, 
+		chartData,
 		childProcess = require('child_process'),
 		phantomjs = require('phantomjs'),
 		utilityModule = require('./utilityModule.js'),
 		mongoose = require('mongoose'),
-		connStr = process.env.MONGOLAB_URI || process.env.MONGOHQ_URL || "mongodb://127.0.0.1:27017/chalish-user-table",
+		options = { server: { socketOptions: { keepAlive: 1, connectTimeoutMS: 30000 } }, 
+                replset: { socketOptions: { keepAlive: 1, connectTimeoutMS : 30000 } } },
+		mongodbUri = config.mongodbUri,
+	 	mongodbUriLocal = config.mongodbUriLocal,
 		User = require('./user-model'),
 		currentUser,
 		selectedGuid,
 		selectedName,
-		chartData;
+		uriUtil = require('mongodb-uri'),
+		mongooseUri = uriUtil.formatMongoose(mongodbUri),
+		connStr = config.host != 'local' ? mongooseUri : mongodbUriLocal;
 
 // checking the notes for tables, dates
 exports.notes = function(req,res) {
 	if (!req.session.oauthAccessToken)
 		return res.redirect('/');	
-
-	console.log('user note list: ', currentUser.noteList);
-
 	req.session.noteList = currentUser.noteList;
-	console.log('user note list in session: ', req.session.noteList);
-
 	res.render('notes', {token: JSON.stringify(req.session.oauthAccessToken), noteList: null, notes: null, data: null, monthNamesArray: null});
 };//end of exports.notes
 
@@ -81,7 +82,6 @@ exports.addNoteToList = function(req, res) {
 	//Check if the noteList already has the note, if not add it.
 	for (count = currentUser.noteList.length, i = 0; i < count; i++) {
 		if (selectedGuid == currentUser.noteList[i].guid) {
-			console.log('new item is false');
 			newItem = false;
 			break;
 		}
@@ -100,8 +100,6 @@ exports.addNoteToList = function(req, res) {
 			//sort the note List Array by name
 			//before saving it.
 			currentUser.noteList.sort(function (a,b){  
-				console.log(a.name);
-				console.log(b.name);
 				return a.name > b.name ? 1:-1;
 			});
 			// save after sorting is done
@@ -162,18 +160,15 @@ exports.notesLoad = function(req, res) {
 	}
 }
 
+// show the chart in view
 exports.getChart = function(req, res) {
-
 	if (req.session.error) 
 		req.session.error = null;
-
 	selectedGuid = req.body.selectedGuid;
-
-	if (!req.session.oauthAccessToken)
+	if (!req.session.oauthAccessToken) {
 		return res.redirect('/');
-
+	}
 	var json;
-
 	if(selectedGuid && selectedGuid != 0) {
 		utilityModule.getChartData(req.session.oauthAccessToken, selectedGuid, function (err, chartData) {
 			if (err) {
@@ -182,7 +177,6 @@ exports.getChart = function(req, res) {
 				console.log('there is an error: ', err);
 			}
 			else {
-				console.log('chartdata: ', chartData);
 				json = JSON.stringify({error: null, chartData: chartData});
 				//res.writeHead(200, {'content-type': 'application/json'});
 				//var json = JSON.stringify({error: null, chartData: chartData});
@@ -200,46 +194,54 @@ exports.getChart = function(req, res) {
 // check the DB for the matching password.
 // save email, oauthAccessToken, and noteList to the session.
 exports.login = function(req, res) {
-  console.log(req.body.email);
-
+	console.log('hereeeee');
+	console.log(connStr);
   mongoose.connect(connStr, function(err) {
-    if (err) console.log(err);
-    else console.log("Successfully connected to MongoDB");
-  });
-
-  // find user in database
-  User.findOne({ email: req.body.email }, function(err, user) {
-    if (err) console.log(err);
-
-    if (user instanceof User) {
-      user.comparePassword(req.body.password, function(err, isMatch) {
-        if (err) req.session.error = err;
-				//since this is the correct user, let's hold his data,
-				//this is for saving his note List.
-				currentUser = user;
-        //we set the session info back here.
-        req.session.email = user.email;
-        req.session.oauthAccessToken = user.oauthAccessToken;
-				req.session.noteList = user.noteList;
-				console.log('here is the notelist:' , req.session.noteList);
-        mongoose.connection.close();
-        res.redirect('/');
-      });
-    }
-    else {
-      req.session.error = "Couldn't find the user";
-      mongoose.connection.close();
+    if (err) {
+			console.log(err);
+      req.session.error = "There is a system error, dev notified";
       res.redirect('/');
-    }
+		}
+		// find user in database
+		console.log('email: ', req.body.email);
+		User.findOne({ email: req.body.email }, function(err, user) {
+			console.log('fuck this shit');
+			if (err) console.log(err);
+			if (user instanceof User) {
+				console.log('noooo');
+				user.comparePassword(req.body.password, function(err, isMatch) {
+					if (err) req.session.error = err;
+					//since this is the correct user, let's hold his data,
+					//this is for saving his note List.
+					currentUser = user;
+					//we set the session info back here.
+					req.session.email = user.email;
+					req.session.oauthAccessToken = user.oauthAccessToken;
+					req.session.noteList = user.noteList;
+					console.log('here is the notelist:' , req.session.noteList);
+					mongoose.connection.close();
+					res.redirect('/');
+				});
+			}
+			else {
+				req.session.error = "Couldn't find the user";
+				mongoose.connection.close();
+				res.redirect('/');
+			}
   });
+  });
+
 };
 
 // home page
 exports.index = function(req, res) {
-  if(req.session.oauthAccessToken) {
-    res.redirect('/notes');
-  } else {
+  if (req.session.email === undefined) {
     res.render('index');
+  } else if(req.session.email === 'create') {
+		res.redirect('/newUser');
+	}
+	else if (req.session.email !== 'create') {
+    res.redirect('/notes');
   }
 };
 
@@ -272,7 +274,6 @@ exports.oauth = function(req, res) {
 
 // OAuth callback
 exports.oauth_callback = function(req, res) {
-  console.log('hu?');
   var client = new Evernote.Client({
     consumerKey: config.API_CONSUMER_KEY,
       consumerSecret: config.API_CONSUMER_SECRET,
@@ -305,51 +306,60 @@ exports.oauth_callback = function(req, res) {
 					// 11/15/2013 Setting the email to 'create' so that
 					// the login form won't show.
 					req.session.email = 'create';
-          res.render('newUser');
+          res.redirect('newUser');
         }
       });
 }
 
-//oauth callback calls to create a new user.
+exports.newUser = function(req,res) {
+	res.render('newUser');
+}
+
+//oauth callback calls the page that creates a new user.
 exports.createUser = function(req,res) {
 
   var newUser;
 
   mongoose.connect(connStr, function(err) {
-    if (err) console.log(err);
-    else console.log("Successfully connected to MongoDB");
-  });
-
-  req.session.email = req.body.email;
-
-  // create a user a new user
-  newUser = new User({
-    email: req.session.email,
-          password: req.body.password,
-          oauthAccessToken: req.session.oauthAccessToken,
-          oauthAccessTokenSecret: req.session.oauthAccessTokenSecret,
-          edamShard: req.session.edamShard,
-          edamUserId: req.session.edamUserId,
-          edamExpires: req.session.edamExpires,
-          edamNoteStoreUrl: req.session.edamNoteStoreUrl,
-          edamWebApiUrlPrefix: req.session.edamWebApiUrlPrefix,
-					noteList: []
-  });
-
-  newUser.save(function(err) {
     if (err) {
-			console.log(err);
-			mongoose.connection.close();
+			req.session.error = 'There is a system error, dev has been notified';
+			console.log(err.message);
+			return;
 		}
-    else	{
-			console.log('Account Creation Successful');
-			mongoose.connection.close();
+    else {
+			console.log("Successfully connected to MongoDB");
+
+			// create a user a new user
+			newUser = new User({
+				email: req.body.email,
+							password: req.body.password,
+							oauthAccessToken: req.session.oauthAccessToken,
+							oauthAccessTokenSecret: req.session.oauthAccessTokenSecret,
+							edamShard: req.session.edamShard,
+							edamUserId: req.session.edamUserId,
+							edamExpires: req.session.edamExpires,
+							edamNoteStoreUrl: req.session.edamNoteStoreUrl,
+							edamWebApiUrlPrefix: req.session.edamWebApiUrlPrefix,
+							noteList: []
+			});
+
+			newUser.save(function(err) {
+				if (err) {
+					console.log(err.message);
+					req.session.error = 'There is a user with the same e-mail in our system. Please try again with another e-mail.';
+					mongoose.connection.close();
+					res.render('newUser');
+				}
+				else	{
+					console.log('Account Creation Successful');
+					mongoose.connection.close();
+					currentUser = newUser;
+					req.session.email = req.body.email;
+					res.redirect('/notes');
+				}
+			});
 		}
-  });
-
-	currentUser = newUser;
-
-  res.redirect('/notes');
+	});
 }
 
 // Clear session
