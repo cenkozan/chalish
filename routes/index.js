@@ -16,7 +16,7 @@ var Evernote = require('evernote').Evernote,
 		selectedName,
 		uriUtil = require('mongodb-uri'),
 		mongooseUri = uriUtil.formatMongoose(mongodbUri),
-		connStr = config.host != 'local' ? mongooseUri : mongodbUriLocal;
+		connStr = config.host != 'local' || process.env.heroku === true ? mongooseUri : mongodbUriLocal;
 
 // checking the notes for tables, dates
 exports.notes = function(req,res) {

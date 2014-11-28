@@ -298,38 +298,6 @@ p {
 	position: relative;
 }
 
-.one:after {
-	content: "1";
-	font-size: 2.5em;
-	position: absolute;
-	right: -50%;
-	vertical-align: middle;
-}
-
-.two:after {
-	content: "2";
-	font-size: 2.5em;
-	position: absolute;
-	vertical-align: middle;
-	left: -50%;
-}
-
-.three:after {
-	content: "3";
-	font-size: 2.5em;
-	position: absolute;
-	right: -50%;
-	vertical-align: middle;
-}
-
-.four:after {
-	content: "4";
-	font-size: 2.5em;
-	position: absolute;
-	left: -50%;
-	vertical-align: middle;
-}
-
 .reddit {
 	position: fixed;
 	left: 0;
