@@ -10,7 +10,7 @@
     "async": "*",
     "bcrypt": "*",
     "body-parser": "*",
-    "cookieParser": "*",
+    "cookie-parser": "*",
     "errorhandler": "*",
     "evernote": "*",
     "express": "*",
