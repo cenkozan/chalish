@@ -22,7 +22,6 @@
     "mongodb-uri": "^0.9.7",
     "mongoose": "*",
     "morgan": "*",
-    "node-sass": "*",
     "node-xml-lite": "*",
     "nodemon": "*",
     "phantomjs": "*",
