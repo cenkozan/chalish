@@ -76,7 +76,7 @@ app.post('/getChart', function (req, res) {
 
 app.use(errorhandler());
 
-app.listen(config.port, function() {
+app.listen(process.env.PORT || config.port, function() {
 	console.log("Express server listening on port " + config.port);
 });
 
