@@ -172,8 +172,12 @@ h1, h2, h3, p {
 	color: #2F2F2F;
 }
 
+@font-face { font-family: Chunkfive; src: url('fonts/Chunkfive/Chunkfive.otf'); } 
+
+@font-face { font-family: Oxygen; src: url('fonts/oxygen/Oxygen.otf'); } 
+
 h1, h2, h3 {
-	font-family: "Open Sans Condensed", "Helvetica Neue", Helvetica, Arial, sans-serif;
+	font-family: Chunkfive, "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
 p a {
@@ -276,8 +280,9 @@ p {
 
 .content.section h1, .content.section h2 {
 	text-align: center;
-	text-transform: uppercase;
+	/*text-transform: uppercase; */
 	margin-bottom: 5%;
+	font-size:48px;
 }
 
 .content.section h3, .content.section > p {
@@ -289,7 +294,7 @@ p {
 }
 
 .content.section p {
-	font-family: 'PT Serif';
+	font-family: 'Oxygen';
 }
 
 /* INDEX.JADE */
@@ -324,9 +329,9 @@ p {
 	margin: 10% 0;
 }
 
-.content.section > p:first-letter, .columns.eight p:first-letter, .columns.eight .smaller p:first-letter, .columns.four .smaller p:first-letter, h3:first-letter {
+/*.content.section > p:first-letter, .columns.eight p:first-letter, .columns.eight .smaller p:first-letter, .columns.four .smaller p:first-letter, h3:first-letter {
 	font-size: 1.5em;
-}
+} */
 
 /*what can you*/
 .content h2 {

@@ -4,8 +4,8 @@
   "SANDBOX" : false,
 	"NODE_ENV" : "development",
 	"port" : "3000",
-	"host" : "heroku",
-	"offline" : false,
+	"host" : "local",
+	"offline" : true,
 	"mongodbUri" : "mongodb://heroku_app19402980:o8dn837s6pv5pd9bna3p1tjkh1@ds035310.mongolab.com:35310/heroku_app19402980",
 	"mongodbUriLocal" : "mongodb://127.0.0.1:27017/chalish-user-table"
 }
