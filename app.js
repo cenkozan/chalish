@@ -8,7 +8,6 @@ var
 		errorhandler = require('errorhandler'),
 		favicon = require('serve-favicon'),
 		http = require('http'),
-		morgan = require('morgan'),
 		path = require('path'),
 		routes = require('./routes'),
 		session = require('express-session');
@@ -32,7 +31,7 @@ app.use(function(req,res,next){
 app.use(express.static(path.join(__dirname, 'public')));
 
 if (process.env.NODE_ENV === 'development') {	
-	app.use(morgan('dev'));
+	app.use(errorhandler());
 }
 
 // Routes
@@ -74,7 +73,6 @@ app.post('/getChart', function (req, res) {
 	routes.getChart(req, res);
 });
 
-app.use(errorhandler());
 
 app.listen(process.env.PORT || config.port, function() {
 	console.log("Express server listening on port " + config.port);
