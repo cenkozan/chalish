@@ -19,7 +19,7 @@
     "jade": "^1.11.0",
     "moment": "^2.10.6",
     "mongodb-uri": "^0.9.7",
-    "mongoose": "^4.1.8",
+    "mongoose": "^5.7.6",
     "node-xml-lite": "^0.0.6",
     "nodemon": "^1.7.0",
     "serve-favicon": "^2.3.0"
